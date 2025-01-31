@@ -39,6 +39,7 @@ export async function signUp(req: Request, res: Response) {
                 httpOnly: true,
                 sameSite: 'strict', 
                 maxAge: 15 * 60 * 1000, // 15 minutes   
+                expires: new Date(Date.now() + 15 * 60 * 1000)
             }
         );
         res.cookie("refreshToken", token.refreshToken,
@@ -46,6 +47,7 @@ export async function signUp(req: Request, res: Response) {
                 httpOnly: true,
                 sameSite: 'strict', 
                 maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
+                expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
             }
         );
 

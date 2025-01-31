@@ -102,3 +102,9 @@ export async function logIn(req: Request, res: Response): Promise<any> {
         return res.status(500).json({ error: "Error logging in user" });
     }
 }
+
+export async function logOut(req: Request, res: Response) {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.status(200).json({ message: "User logged out successfully" });
+}

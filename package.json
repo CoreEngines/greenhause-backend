@@ -25,6 +25,7 @@
     "express": "^4.21.2",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
+    "mern-ts": "file:",
     "mongoose": "^8.9.5",
     "npm": "^11.1.0",
     "uuid": "^11.0.5"

@@ -7,5 +7,13 @@ export async function hashPassword(password: string): Promise<string>  {
     } catch (error) {
         throw new Error('Error hashing password'); 
     }
+}
 
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+    try {
+        const match = await bcrypt.compare(password, hash);
+        return match;
+    } catch (error) {
+        throw new Error('Error comparing password'); 
+    }
 }

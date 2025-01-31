@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { hashPassword } from '../utils/hash';
+import { comparePassword, hashPassword } from '../utils/hash';
 import User from '../models/users';
 import { Token, generateAccessToken, generateRefreshToken } from '../utils/jwt';
 
@@ -56,5 +56,49 @@ export async function signUp(req: Request, res: Response) {
         });
     } catch (error) {
         res.status(500).json({ error: "Error creating user" });
+    }
+}
+
+export async function logIn(req: Request, res: Response): Promise<any> {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: "Please fill in all fields" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(400).json({ error: "user doesnt exisit" });
+    }
+
+    try {
+        const match = await comparePassword(password, user.password);
+        if (!match) {
+            return res.status(400).json({ error: "Invalid credentials" });
+        } else {
+            const token: Token = {
+                accessToken: generateAccessToken({ userId: user._id, email: user.email }),
+                refreshToken: generateRefreshToken({ userId: user._id, email: user.email }),
+            };
+
+            res.cookie("accessToken", token.accessToken, {
+                httpOnly: true,
+                sameSite: 'strict',
+                maxAge: 15 * 60 * 1000, // 15 minutes
+                expires: new Date(Date.now() + 15 * 60 * 1000)
+            });
+            res.cookie("refreshToken", token.refreshToken, {
+                httpOnly: true,
+                sameSite: 'strict',
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            });
+
+            return res.status(200).json({
+                message: "User logged in successfully",
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({ error: "Error logging in user" });
     }
 }

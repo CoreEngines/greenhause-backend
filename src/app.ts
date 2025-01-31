@@ -22,8 +22,8 @@ app.use(errorLogger);
 app.use(cors({
     credentials: true,
 }));
-app.use("/auth", authRouter);
 app.use(cookieParser());
+app.use("/auth", authRouter);
 
 app.get("/",  (req: Request, res, Response) => {
     res.status(200).json({ message: "Hello, World!"});

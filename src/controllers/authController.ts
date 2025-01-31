@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash';
 import User from '../models/users';
-import { Token, generateAccessToken, generateRefreshToken } from '../utils/jwt';
+import { Token, TokenPayLoad, generateAccessToken, generateRefreshToken } from '../utils/jwt';
 
 export async function signUp(req: Request, res: Response) {
     const { name , email, password} =  req.body;
@@ -59,7 +60,7 @@ export async function signUp(req: Request, res: Response) {
     }
 }
 
-export async function logIn(req: Request, res: Response): Promise<any> {
+export async function singIn(req: Request, res: Response): Promise<any> {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -103,8 +104,48 @@ export async function logIn(req: Request, res: Response): Promise<any> {
     }
 }
 
-export async function logOut(req: Request, res: Response) {
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
-    res.status(200).json({ message: "User logged out successfully" });
+export function logout(req: Request, res: Response) {
+    try {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        res.status(200).json({ message: "User logged out successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 }
+
+export function refresh(req: Request, res: Response) {
+    // Get refresh token from cookie    
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        res.status(400).json({ error: "No refresh token provided" });
+    }
+
+    try {
+    // Check if refresh token exists and decode the token payload
+    const payload: TokenPayLoad = jwt.verify(refreshToken, process.env.JWT_RT_SECRET!) as TokenPayLoad;
+
+    // Generate new access token
+    const newAccessToken = generateAccessToken({ userId: payload.userId, email: payload.email });
+
+    // Replace access token in cookie
+    res.cookie(
+        "accessToken",
+        newAccessToken,
+        {
+            httpOnly: true,
+            sameSite: 'strict', 
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            expires: new Date(Date.now() + 15 * 60 * 1000)
+        }
+    );
+
+    res.status(200).json({ message: "Access token refreshed" });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};

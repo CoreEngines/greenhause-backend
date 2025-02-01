@@ -8,6 +8,8 @@ import { logger } from "./middlewares/logger";
 import { errorLogger } from "./middlewares/errorLogger";
 import authRouter from "./routes/authRoutes";
 import { connectDB } from "./config/dbConnection";
+import  { isAuthenticated } from "./middlewares/authMiddleware";
+import { signUp, singIn } from "./controllers/authController";
 
 dotenv.config();
 
@@ -23,7 +25,10 @@ app.use(cors({
     credentials: true,
 }));
 app.use(cookieParser());
-app.use("/auth", authRouter);
+
+app.use("/sign-up", signUp);
+app.use("/sign-in", singIn);
+app.use("/auth", isAuthenticated, authRouter);
 
 app.get("/",  (req: Request, res, Response) => {
     res.status(200).json({ message: "Hello, World!"});

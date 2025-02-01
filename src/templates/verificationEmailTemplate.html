@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .button {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Email Verification, code: {{VERIFICATION_TOKEN}}</h2>
+        <p>Thank you for signing up! Please click the button below to verify your email address:</p>
+        <a href="{{VERIFICATION_LINK}}" class="button">Verify Email</a>
+        <p>If you did not create this account, you can ignore this email.</p>
+        <p class="footer">This email was sent by MyApp. If you have any questions, contact support.</p>
+        <p>if there is any problem with the link, use this link: {{VERIFICATION_LINK}}</p>
+    </div>
+</body>
+</html>

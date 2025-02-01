@@ -21,8 +21,8 @@ export async function sendEmail(userEmail: string, subject: string, emailBody: s
     };
 };
 
-export  function getEmailTemplate(verificationTokenLink: string, verificationToken: string): string {
-    const filePath = path.join(__dirname, "../templates/verificationEmailTemplate.html");
+export  function getEmailTemplate(link: string, token: string, template: string): string {
+    const filePath = path.join(__dirname, `../templates/${template}.html`);
 
     try {
         if (!emailTemplateCache) {
@@ -30,8 +30,8 @@ export  function getEmailTemplate(verificationTokenLink: string, verificationTok
         }
 
         const emailBody = emailTemplateCache
-            .replace(/{{VERIFICATION_TOKEN}}/g, verificationToken)
-            .replace(/{{VERIFICATION_LINK}}/g, verificationTokenLink);
+            .replace(/{{TOKEN}}/g, token)
+            .replace(/{{LINK}}/g, link);
 
         return emailBody;
     } catch (error) {

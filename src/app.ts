@@ -26,8 +26,8 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use("/sign-up", signUp);
-app.use("/sign-in", singIn);
+app.post("/sign-up", signUp);
+app.post("/sign-in", singIn);
 app.use("/auth", isAuthenticated, authRouter);
 
 app.get("/",  (req: Request, res, Response) => {

@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash';
 import User from '../models/users';
+import { getEmailTemplate, sendEmail } from '../utils/email';
+import { generateFormattedToken } from '../utils/verificationToken';
+import VerificationToken from '../models/verificationTokens';
 import { Token, TokenPayLoad, generateAccessToken, generateRefreshToken } from '../utils/jwt';
 
 export async function signUp(req: Request, res: Response) {
@@ -147,5 +150,42 @@ export function refresh(req: Request, res: Response) {
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+export async function sendVerificationEmail(req: Request, res: Response) {
+    // get the access token from the cookie
+    const accessToken: string = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({ error: "No access token provided" });
+    }
+
+    const payload: TokenPayLoad = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid access token" });
+    }   
+
+    const verificationToken =  new VerificationToken({
+        token: generateFormattedToken(),
+        userId: payload.userId,
+    });
+
+    try {
+        await verificationToken.save();
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Error saving verification token" });
+    }
+
+    const verificationTokenLink: string = `http://localhost:3030/auth/verify?token=${verificationToken.token}`;
+    const emailBody = getEmailTemplate(verificationTokenLink, verificationToken.token);
+    const subject: string = "Email Verification";
+
+    try {
+        await sendEmail(payload.email, subject, emailBody);
+        res.status(200).json({ message: "Verification email sent" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: "Error sending verification email" });
     }
 };

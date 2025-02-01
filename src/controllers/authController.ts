@@ -189,3 +189,50 @@ export async function sendVerificationEmail(req: Request, res: Response) {
         res.status(500).json({ error: "Error sending verification email" });
     }
 };
+
+export async function verifyEmail(req: Request, res: Response): Promise<any> {
+    const verificationToken = req.query.token as string;
+    console.log(verificationToken);
+
+    if (!verificationToken) {
+        return res.status(400).json({ error: "Token is required"});
+    }
+
+    try {
+        const token = await VerificationToken.findOne({ token: verificationToken });
+        if (!token) {
+            return res.status(404).json({ error: "Invalid or expired token" });
+        }
+
+        const user = await User.findOne({ _id: token.userId });
+        if (!user) {
+            return res.status(404).json({
+                error: "User associated with this token was not found. It may have been deleted or does not exist.",
+            });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: "User already verified" });
+        }
+
+        user.isVerified = true;
+        try {
+            await user.save();
+        } catch (error) {
+            console.error("Error saving user:", error);
+            return res.status(500).json({ error: "Error updating user" });
+        }
+
+        try {
+            await VerificationToken.deleteOne({ _id: token._id });
+        } catch (error) {
+            console.error("Error deleting token:", error);
+            return res.status(500).json({ error: "Error cleaning up token" });
+        }
+
+        return res.status(200).json({ message: "Email verified successfully" });
+    } catch (error) {
+        console.error("Error verifying email:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    };
+};

@@ -177,8 +177,8 @@ export async function sendVerificationEmail(req: Request, res: Response) {
         res.status(500).json({ error: "Error saving verification token" });
     }
 
-    const verificationTokenLink: string = `http://localhost:3030/auth/verify?token=${verificationToken.token}`;
-    const emailBody = getEmailTemplate(verificationTokenLink, verificationToken.token);
+    const verificationTokenLink: string = `http://localhost:${process.env.PORT}/auth/verify?token=${verificationToken.token}`;
+    const emailBody = getEmailTemplate(verificationTokenLink, verificationToken.token, "verification-email-template");
     const subject: string = "Email Verification";
 
     try {
@@ -234,5 +234,48 @@ export async function verifyEmail(req: Request, res: Response): Promise<any> {
     } catch (error) {
         console.error("Error verifying email:", error);
         return res.status(500).json({ error: "Internal server error" });
+    };
+};
+
+export async function forgotPassword(req: Request, res: Response): Promise<any> { 
+    const { email } = req.body;
+    console.log(email);
+    if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+    }
+
+    try {
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const resetPasswordToken = new VerificationToken({
+            token: generateFormattedToken(),
+            userId: user._id,
+        });
+
+        try {
+            await resetPasswordToken.save();
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ error: "Error saving reset password token" });
+        }
+
+        const resetPasswordLink: string = `http://localhost:${process.env.PORT}/auth/reset-password?token=${resetPasswordToken.token}`;
+        const emailBody = getEmailTemplate(resetPasswordLink, resetPasswordToken.token, "forgot-password-template");
+        const subject: string = "Reset Password";
+
+        try {
+            await sendEmail(user.email, subject, emailBody);
+            res.status(200).json({ message: "Reset password email sent" });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ error: "Error sending reset password email" });
+        };
+
+    } catch (error) {
+        console.error("Error saving reset password token:", error);
+        return res.status(500).json({ error: "User not found" });
     };
 };

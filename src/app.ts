@@ -9,7 +9,7 @@ import { errorLogger } from "./middlewares/errorLogger";
 import authRouter from "./routes/authRoutes";
 import { connectDB } from "./config/dbConnection";
 import  { isAuthenticated } from "./middlewares/authMiddleware";
-import { signUp, singIn } from "./controllers/authController";
+import unAuthRouter from "./routes/unAuthRoutes";
 
 dotenv.config();
 
@@ -26,8 +26,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.post("/sign-up", signUp);
-app.post("/sign-in", singIn);
+app.use("/auth", unAuthRouter);
 app.use("/auth", isAuthenticated, authRouter);
 
 app.get("/",  (req: Request, res, Response) => {

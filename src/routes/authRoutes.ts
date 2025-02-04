@@ -7,7 +7,5 @@ authRouter.get('/logout', logout);
 authRouter.get('/refresh', refresh)
 authRouter.get('/request-email-verification', sendVerificationEmail);
 authRouter.get('/verify', verifyEmail);
-authRouter.post('/forgot-password', forgotPassword);
-authRouter.post('/reset-password', resetPassword);
 
 export default authRouter;

@@ -10,6 +10,7 @@ import authRouter from "./routes/authRoutes";
 import { connectDB } from "./config/dbConnection";
 import  { isAuthenticated } from "./middlewares/authMiddleware";
 import unAuthRouter from "./routes/unAuthRoutes";
+import { appRateLimiter } from "./middlewares/rateLimiter";
 
 dotenv.config();
 
@@ -26,8 +27,8 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use("/auth", unAuthRouter);
-app.use("/auth", isAuthenticated, authRouter);
+app.use("/auth", appRateLimiter, unAuthRouter);
+app.use("/auth", appRateLimiter, isAuthenticated, authRouter);
 
 app.get("/",  (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!"});

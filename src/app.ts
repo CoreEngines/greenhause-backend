@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use("/auth", unAuthRouter);
 app.use("/auth", isAuthenticated, authRouter);
 
-app.get("/",  (req: Request, res, Response) => {
+app.get("/",  (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!"});
 });
 

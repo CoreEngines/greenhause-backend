@@ -17,6 +17,8 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/mongoose": "^5.11.96",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -29,6 +31,8 @@
     "mern-ts": "file:",
     "mongoose": "^8.9.5",
     "npm": "^11.1.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "resend": "^4.1.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"

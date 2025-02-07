@@ -1,15 +1,16 @@
-import express, {Request, Response} from "express";
+import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { error } from "console";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import authRouter from "./routes/authRoutes";
+import PassportConfig from "./config/passportConfig";
+import unAuthRouter from "./routes/unAuthRoutes";
 import { logger } from "./middlewares/logger";
 import { errorLogger } from "./middlewares/errorLogger";
-import authRouter from "./routes/authRoutes";
 import { connectDB } from "./config/dbConnection";
-import  { isAuthenticated } from "./middlewares/authMiddleware";
-import unAuthRouter from "./routes/unAuthRoutes";
+import { isAuthenticated } from "./middlewares/authMiddleware";
 import { appRateLimiter } from "./middlewares/rateLimiter";
 
 dotenv.config();
@@ -27,7 +28,15 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use("/auth", appRateLimiter, unAuthRouter);
+try {
+    const passportConfig = new PassportConfig();
+    app.use(passportConfig.initialize());
+  } catch (error) {
+    console.error("[ERROR]: Failed to set up OAuth strategies:", error);
+    throw new Error("Failed to set up OAuth strategies. Check your configuration and environment variables.");
+  }
+
+app.use("/auth", appRateLimiter,unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, authRouter);
 
 app.get("/",  (req: Request, res: Response) => {

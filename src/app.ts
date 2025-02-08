@@ -36,7 +36,7 @@ try {
     throw new Error("Failed to set up OAuth strategies. Check your configuration and environment variables.");
 }
 
-app.use("/auth", appRateLimiter,unAuthRouter);
+app.use("/auth", appRateLimiter, unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, authRouter);
 
 app.get("/",  (req: Request, res: Response) => {

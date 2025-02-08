@@ -9,7 +9,7 @@ export async function sendEmail(userEmail: string, subject: string, emailBody: s
     const myEmail = "MERN <express@resend.dev>";
 
     try {
-        const response = await resend.emails.send({
+        await resend.emails.send({
             from: myEmail,
             to: [userEmail],
             subject: subject,

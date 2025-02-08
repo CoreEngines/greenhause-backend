@@ -22,9 +22,14 @@ class PassportConfig {
           console.log("[INFO]: Google Strategy Configured");
           try {
             const { id, displayName, emails } = profile;
-
+            
             let user = await User.findOne({ "providers.providerId": id });
             if (!user) {
+              const userExists = await User.findOne({ email: emails?.[0].value });
+              if (userExists) {
+                console.log("[INFO]: Email already exists");
+                return done(new Error("Email already exists"), { message: "Email already exists" });
+              }
               user = await User.create({
                 name: displayName,
                 email: emails?.[0].value,
@@ -40,7 +45,7 @@ class PassportConfig {
 
             done(null, user, { accessToken, refreshToken });
           } catch (error) {
-            done(error as Error);
+            done(error as Error,{message: "An error occurred while authenticating with Google"});
           }
         }
       )

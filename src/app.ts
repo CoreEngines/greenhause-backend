@@ -31,10 +31,10 @@ app.use(cookieParser());
 try {
     const passportConfig = new PassportConfig();
     app.use(passportConfig.initialize());
-  } catch (error) {
+} catch (error) {
     console.error("[ERROR]: Failed to set up OAuth strategies:", error);
     throw new Error("Failed to set up OAuth strategies. Check your configuration and environment variables.");
-  }
+}
 
 app.use("/auth", appRateLimiter,unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, authRouter);

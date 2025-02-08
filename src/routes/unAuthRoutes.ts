@@ -20,45 +20,45 @@ unAuthRouter.get(
 );
 
 unAuthRouter.get(
-  "/github",
-  passport.authenticate(
-    'github',
-    { scope : ["profile","email"]},
-  )
-)
+    "/github",
+    passport.authenticate(
+        'github',
+        { scope : ["profile","email"]},
+    )
+);
 
 unAuthRouter.get(
     "/google/callback",
     passport.authenticate("google", { session: false }), 
     (req, res) => {
-      const user = req.user as any; // Type assertion
-      const token: Token = {
-      accessToken: generateAccessToken({ userId: user._id, email: user.email }),
-      refreshToken: generateRefreshToken({ userId: user._id, email: user.email }),
-      };
-      if (req.user) {
-        res.cookie("accessToken", token.accessToken, { httpOnly: true, secure: true });
-        res.cookie("refreshToken", token.accessToken, { httpOnly: true, secure: true });
-        res.redirect("/");
-      }
+        const user = req.user as any; // Type assertion
+        const token: Token = {
+            accessToken: generateAccessToken({ userId: user._id, email: user.email }),
+            refreshToken: generateRefreshToken({ userId: user._id, email: user.email }),
+        };
+        if (req.user) {
+            res.cookie("accessToken", token.accessToken, { httpOnly: true, secure: true });
+            res.cookie("refreshToken", token.accessToken, { httpOnly: true, secure: true });
+            res.redirect("/");
+        }
     }
-  );
+);
 
 unAuthRouter.get(
-  "/github/callback",
-  passport.authenticate("github",{session:false}),
-  (req,res) => {
-    const user = req.user as any;
-    const token : Token = {
-      accessToken : generateAccessToken({userId:user._id, email:user.email}),
-      refreshToken: generateRefreshToken({userId:user._id,email:user.email}),
-    };
-    if (req.user){
-      res.cookie("accessToken", token.accessToken,{httpOnly:true, secure:true});
-      res.cookie("refreshToken", token.refreshToken,{httpOnly:true, secure:true});
-      res.redirect("/");
+    "/github/callback",
+    passport.authenticate("github",{session:false}),
+    (req,res) => {
+        const user = req.user as any;
+        const token : Token = {
+            accessToken : generateAccessToken({userId:user._id, email:user.email}),
+            refreshToken: generateRefreshToken({userId:user._id,email:user.email}),
+        };
+        if (req.user){
+            res.cookie("accessToken", token.accessToken,{httpOnly:true, secure:true});
+            res.cookie("refreshToken", token.refreshToken,{httpOnly:true, secure:true});
+            res.redirect("/");
+        }
     }
-  }
 )
 
 export default unAuthRouter;

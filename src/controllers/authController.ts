@@ -64,47 +64,50 @@ export async function signUp(req: Request, res: Response) {
     }
 }
 
-export async function singIn(req: Request, res: Response): Promise<any> {
+export async function signIn(req: Request, res: Response): Promise<void> {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ error: "Please fill in all fields" });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-        return res.status(400).json({ error: "user doesnt exisit" });
+        res.status(400).json({ error: "Please fill in all fields" });
+        return; 
     }
 
     try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            res.status(400).json({ error: "User doesn't exist" });
+            return; 
+        }
         const match = await comparePassword(password, user.password);
         if (!match) {
-            return res.status(400).json({ error: "Invalid credentials" });
-        } else {
-            const token: Token = {
-                accessToken: generateAccessToken({ userId: user._id, email: user.email }),
-                refreshToken: generateRefreshToken({ userId: user._id, email: user.email }),
-            };
-
-            res.cookie("accessToken", token.accessToken, {
-                httpOnly: true,
-                sameSite: 'strict',
-                maxAge: 15 * 60 * 1000, // 15 minutes
-                expires: new Date(Date.now() + 15 * 60 * 1000)
-            });
-            res.cookie("refreshToken", token.refreshToken, {
-                httpOnly: true,
-                sameSite: 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            });
-
-            return res.status(200).json({
-                message: "User logged in successfully",
-            });
+            res.status(400).json({ error: "Invalid credentials" });
+            return; 
         }
+
+        const token: Token = {
+            accessToken: generateAccessToken({ userId: user._id, email: user.email }),
+            refreshToken: generateRefreshToken({ userId: user._id, email: user.email }),
+        };
+
+        res.cookie("accessToken", token.accessToken, {
+            httpOnly: true,
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000, // 15 minutes
+            expires: new Date(Date.now() + 15 * 60 * 1000),
+        });
+        res.cookie("refreshToken", token.refreshToken, {
+            httpOnly: true,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+
+        res.status(200).json({
+            message: "User logged in successfully",
+        });
     } catch (error) {
-        return res.status(500).json({ error: "Error logging in user" });
+        console.error("Error logging in user:", error);
+        res.status(500).json({ error: "Error logging in user" });
     }
 }
 
@@ -191,29 +194,33 @@ export async function sendVerificationEmail(req: Request, res: Response) {
     }
 };
 
-export async function verifyEmail(req: Request, res: Response): Promise<any> {
+export async function verifyEmail(req: Request, res: Response): Promise<void> {
     const verificationToken = req.query.token as string;
     console.log(verificationToken);
 
     if (!verificationToken) {
-        return res.status(400).json({ error: "Token is required"});
+        res.status(400).json({ error: "Token is required" });
+        return; 
     }
 
     try {
         const token = await VerificationToken.findOne({ token: verificationToken });
         if (!token) {
-            return res.status(404).json({ error: "Invalid or expired token" });
+            res.status(404).json({ error: "Invalid or expired token" });
+            return;
         }
 
         const user = await User.findOne({ _id: token.userId });
         if (!user) {
-            return res.status(404).json({
+            res.status(404).json({
                 error: "User associated with this token was not found. It may have been deleted or does not exist.",
             });
+            return; 
         }
 
         if (user.isVerified) {
-            return res.status(400).json({ message: "User already verified" });
+            res.status(400).json({ message: "User already verified" });
+            return; 
         }
 
         user.isVerified = true;
@@ -221,34 +228,38 @@ export async function verifyEmail(req: Request, res: Response): Promise<any> {
             await user.save();
         } catch (error) {
             console.error("Error saving user:", error);
-            return res.status(500).json({ error: "Error updating user" });
+            res.status(500).json({ error: "Error updating user" });
+            return; 
         }
 
         try {
             await VerificationToken.deleteOne({ _id: token._id });
         } catch (error) {
             console.error("Error deleting token:", error);
-            return res.status(500).json({ error: "Error cleaning up token" });
+            res.status(500).json({ error: "Error cleaning up token" });
+            return;
         }
 
-        return res.status(200).json({ message: "Email verified successfully" });
+        res.status(200).json({ message: "Email verified successfully" });
     } catch (error) {
         console.error("Error verifying email:", error);
-        return res.status(500).json({ error: "Internal server error" });
-    };
-};
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
-export async function forgotPassword(req: Request, res: Response): Promise<any> { 
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
     const { email } = req.body;
     console.log(email);
     if (!email) {
-        return res.status(400).json({ error: "Email is required" });
+        res.status(400).json({ error: "Email is required" });
+        return;
     }
 
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
-            return res.status(404).json({ error: "User not found" });
+            res.status(404).json({ error: "User not found" });
+            return;
         }
 
         const resetPasswordToken = new VerificationToken({
@@ -261,6 +272,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<any> 
         } catch (error) {
             console.log(error);
             res.status(500).json({ error: "Error saving reset password token" });
+            return;
         }
 
         const resetPasswordLink: string = `http://localhost:${process.env.PORT}/auth/reset-password?token=${resetPasswordToken.token}`;
@@ -273,37 +285,40 @@ export async function forgotPassword(req: Request, res: Response): Promise<any> 
         } catch (error) {
             console.log(error);
             res.status(500).json({ error: "Error sending reset password email" });
-        };
-
+        }
     } catch (error) {
         console.error("Error saving reset password token:", error);
-        return res.status(500).json({ error: "User not found" });
-    };
-};
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
-export async function resetPassword(req: Request, res: Response): Promise<any> {
+export async function resetPassword(req: Request, res: Response): Promise<void> {
     const resetPasswordToken = req.query.token as string;
     const { password } = req.body;
 
     if (!resetPasswordToken) {
-        return res.status(400).json({ error: "Token is required" });
+        res.status(400).json({ error: "Token is required" });
+        return;
     }
 
     if (!password) {
-        return res.status(400).json({ error: "Password is required" });
+        res.status(400).json({ error: "Password is required" });
+        return;
     }
 
     try {
         const token = await VerificationToken.findOne({ token: resetPasswordToken });
         if (!token) {
-            return res.status(404).json({ error: "Invalid or expired token" });
+            res.status(404).json({ error: "Invalid or expired token" });
+            return;
         }
 
         const user = await User.findOne({ _id: token.userId });
         if (!user) {
-            return res.status(404).json({
+            res.status(404).json({
                 error: "User associated with this token was not found. It may have been deleted or does not exist.",
             });
+            return;
         }
 
         const hash = await hashPassword(password);
@@ -312,19 +327,21 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
             await user.save();
         } catch (error) {
             console.error("Error saving user:", error);
-            return res.status(500).json({ error: "Error updating user" });
+            res.status(500).json({ error: "Error updating user" });
+            return;
         }
 
         try {
             await VerificationToken.deleteOne({ _id: token._id });
         } catch (error) {
             console.error("Error deleting token:", error);
-            return res.status(500).json({ error: "Error cleaning up token" });
+            res.status(500).json({ error: "Error cleaning up token" });
+            return;
         }
 
-        return res.status(200).json({ message: "Password reset successfully" });
+        res.status(200).json({ message: "Password reset successfully" });
     } catch (error) {
         console.error("Error resetting password:", error);
-        return res.status(500).json({ error: "Internal server error" });
-    };
-};
+        res.status(500).json({ error: "Internal server error" });
+    }
+}

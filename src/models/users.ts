@@ -35,7 +35,19 @@ const userSchema = new mongoose.Schema({
             enum: ["local", "google"],
             default: "local"
         },
-    }]
+    }],
+    createdAt: {
+        type: Date,
+        default: Date.now(),
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now(),
+    },
+    deletedAt: {
+        type: Date,
+        default: null,
+    },
 });
 
 export default mongoose.model("User", userSchema);

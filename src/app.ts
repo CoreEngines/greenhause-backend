@@ -12,6 +12,7 @@ import { errorLogger } from "./middlewares/errorLogger";
 import { connectDB } from "./config/dbConnection";
 import { isAuthenticated } from "./middlewares/authMiddleware";
 import { appRateLimiter } from "./middlewares/rateLimiter";
+import usersRouter from "./routes/usersRoutes";
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ try {
 
 app.use("/auth", appRateLimiter, unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, authRouter);
+app.use("/users", appRateLimiter, isAuthenticated, usersRouter);
 
 app.get("/",  (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!"});

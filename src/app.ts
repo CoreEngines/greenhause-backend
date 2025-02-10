@@ -13,6 +13,7 @@ import { connectDB } from "./config/dbConnection";
 import { isAuthenticated } from "./middlewares/authMiddleware";
 import { appRateLimiter } from "./middlewares/rateLimiter";
 import usersRouter from "./routes/usersRoutes";
+import { setupSwagger } from "./config/swagger";
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ try {
     console.error("[ERROR]: Failed to set up OAuth strategies:", error);
     throw new Error("Failed to set up OAuth strategies. Check your configuration and environment variables.");
 }
+
+setupSwagger(app);
 
 app.use("/auth", appRateLimiter, unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, authRouter);

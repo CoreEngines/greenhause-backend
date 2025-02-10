@@ -1,12 +1,3 @@
-/**
- * Get all users
- * get user with id
- * get user from token 
- * update user 
- * delete user by id
- * delete user by token
- *  
- */
 import { Request, Response } from "express";
 import User from "../models/users";
 import jwt from "jsonwebtoken";

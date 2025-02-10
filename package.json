@@ -19,6 +19,8 @@
     "@types/mongoose": "^5.11.96",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.7",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -35,6 +37,8 @@
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "resend": "^4.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.1"
   },

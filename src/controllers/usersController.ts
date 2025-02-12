@@ -136,14 +136,14 @@ export async function deleteUserById(req: Request, res: Response): Promise<void>
 }
 
 export async function requestAccountDeletion(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
         res.status(400).json({ error: "No refresh token provided" });
         return;
     }
 
     try {
-        const payload = jwt.verify(refreshToken, process.env.JWT_RT_SECRET!) as TokenPayLoad;
+        const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
         if (!payload) {
             res.status(400).json({ error: "Invalid refresh token" });
             return;
@@ -179,17 +179,12 @@ export async function requestAccountDeletion(req: Request, res: Response): Promi
 
         try {
             await sendEmail(user.email, subject, emailBody);
-            res.status(200).json({ message: "Account deletion emaul sent successfully" });
+            res.status(200).json({ message: "Account deletion email sent successfully" });
         } catch (error) {
             console.log(error);
             res.status(500).json({ error: "Error sending reset password email" });
         }
-
-        user.deletedAt = new Date(Date.now());
-
-        await user.save();
-        res.status(200).json({ message: "User deleted successfully" });
-
+        
     } catch (error) {
         console.error(error);
 

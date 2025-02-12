@@ -4,6 +4,7 @@ import { validateRequestBody, signUpSchema, email } from "../validators/authVali
 import passport from "passport";
 import { generateAccessToken, generateRefreshToken, Token } from "../utils/jwt";
 import { Types } from "mongoose";
+import { accessTokenDuration, refreshTokenDuration } from "../utils/jwt";
 
 type ProviderUserPayload = {
     _id: Types.ObjectId;
@@ -221,13 +222,13 @@ unAuthRouter.get(
             httpOnly: true,
             secure: true,
             sameSite: "strict",
-            maxAge: 15 * 60 * 1000, // 15 minutes
+            maxAge: accessTokenDuration,
         });
         res.cookie("refreshToken", token.refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            maxAge: refreshTokenDuration,
         });
 
         res.redirect("/");
@@ -263,13 +264,13 @@ unAuthRouter.get(
             httpOnly: true,
             secure: true,
             sameSite: "strict",
-            maxAge: 15 * 60 * 1000, // 15 minutes
+            maxAge: accessTokenDuration,
         });
         res.cookie("refreshToken", token.refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            maxAge: refreshTokenDuration,
         });
 
         res.redirect("/");

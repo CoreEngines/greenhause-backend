@@ -6,6 +6,7 @@ import { getEmailTemplate, sendEmail } from '../utils/email';
 import { generateFormattedToken } from '../utils/verificationToken';
 import VerificationToken from '../models/verificationTokens';
 import { Token, TokenPayLoad, generateAccessToken, generateRefreshToken } from '../utils/jwt';
+import { refreshTokenDuration, accessTokenDuration } from '../utils/jwt';
 
 export async function signUp(req: Request, res: Response) {
     const { name , email, password} =  req.body;
@@ -42,16 +43,16 @@ export async function signUp(req: Request, res: Response) {
             { 
                 httpOnly: true,
                 sameSite: 'strict', 
-                maxAge: 15 * 60 * 1000, // 15 minutes   
-                expires: new Date(Date.now() + 15 * 60 * 1000)
+                maxAge: accessTokenDuration,
+                expires: new Date(Date.now() + accessTokenDuration)
             }
         );
         res.cookie("refreshToken", token.refreshToken,
             { 
                 httpOnly: true,
                 sameSite: 'strict', 
-                maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
-                expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                maxAge: refreshTokenDuration, 
+                expires: new Date(Date.now() + refreshTokenDuration)
             }
         );
 
@@ -92,14 +93,14 @@ export async function signIn(req: Request, res: Response): Promise<void> {
         res.cookie("accessToken", token.accessToken, {
             httpOnly: true,
             sameSite: 'strict',
-            maxAge: 15 * 60 * 1000, // 15 minutes
-            expires: new Date(Date.now() + 15 * 60 * 1000),
+            maxAge: accessTokenDuration, 
+            expires: new Date(Date.now() + accessTokenDuration),
         });
         res.cookie("refreshToken", token.refreshToken, {
             httpOnly: true,
             sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            maxAge: refreshTokenDuration, 
+            expires: new Date(Date.now() + refreshTokenDuration),
         });
 
         res.status(200).json({
@@ -144,8 +145,8 @@ export function refresh(req: Request, res: Response) {
         {
             httpOnly: true,
             sameSite: 'strict', 
-            maxAge: 15 * 60 * 1000, // 15 minutes
-            expires: new Date(Date.now() + 15 * 60 * 1000)
+            maxAge: accessTokenDuration, 
+            expires: new Date(Date.now() + accessTokenDuration)
         }
     );
 

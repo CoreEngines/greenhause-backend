@@ -10,7 +10,7 @@ import unAuthRouter from "./routes/unAuthRoutes";
 import { logger } from "./middlewares/logger";
 import { errorLogger } from "./middlewares/errorLogger";
 import { connectDB } from "./config/dbConnection";
-import { isAuthenticated } from "./middlewares/authMiddleware";
+import { isAuthenticated, isDeleted } from "./middlewares/authMiddleware";
 import { appRateLimiter } from "./middlewares/rateLimiter";
 import usersRouter from "./routes/usersRoutes";
 import { setupSwagger } from "./config/swagger";
@@ -40,9 +40,13 @@ try {
 
 setupSwagger(app);
 
-app.use("/auth", appRateLimiter, unAuthRouter);
-app.use("/auth", appRateLimiter, isAuthenticated, authRouter);
-app.use("/users", appRateLimiter, isAuthenticated, usersRouter);
+// app.use("/auth", appRateLimiter, unAuthRouter);
+// app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
+// app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter); Disabled for testing
+
+app.use("/auth", unAuthRouter);
+app.use("/auth", isAuthenticated, isDeleted, authRouter);
+app.use("/users", isAuthenticated, isDeleted, usersRouter);
 
 app.get("/",  (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!"});

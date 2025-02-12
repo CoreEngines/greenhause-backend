@@ -79,6 +79,10 @@ export async function signIn(req: Request, res: Response): Promise<void> {
             res.status(400).json({ error: "User doesn't exist" });
             return; 
         }
+        if (user.isDeleted) {
+            res.status(400).json({ error: "Unauthorized" });
+            return;
+        }
         const match = await comparePassword(password, user.password);
         if (!match) {
             res.status(400).json({ error: "Invalid credentials" });
@@ -123,7 +127,7 @@ export function logout(req: Request, res: Response) {
     }
 }
 
-export function refresh(req: Request, res: Response) {
+export async function refresh(req: Request, res: Response) {
     // Get refresh token from cookie    
     const refreshToken = req.cookies.refreshToken;
 
@@ -134,9 +138,24 @@ export function refresh(req: Request, res: Response) {
     try {
     // Check if refresh token exists and decode the token payload
     const payload: TokenPayLoad = jwt.verify(refreshToken, process.env.JWT_RT_SECRET!) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid refresh token" });
+    }
+    
+    const user = await User.findOne({email: payload.email});
+    if (!user) {
+        res.status(400).json({ error: "User doesn't exist" });
+        return; 
+    }
+    if (user.isDeleted) {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
 
     // Generate new access token
     const newAccessToken = generateAccessToken({ userId: payload.userId, email: payload.email });
+    
+
 
     // Replace access token in cookie
     res.cookie(
@@ -169,6 +188,15 @@ export async function sendVerificationEmail(req: Request, res: Response) {
     if (!payload) {
         res.status(400).json({ error: "Invalid access token" });
     }   
+    const user = await User.findOne({email: payload.email});
+    if (!user) {
+        res.status(400).json({ error: "User doesn't exist" });
+        return; 
+    }
+    if (user.isDeleted) {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
 
     const verificationToken =  new VerificationToken({
         token: generateFormattedToken(),
@@ -260,6 +288,10 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
         const user = await User.findOne({ email: email });
         if (!user) {
             res.status(404).json({ error: "User not found" });
+            return;
+        }
+        if (user.isDeleted) {
+            res.status(400).json({ error: "Unauthorized" });
             return;
         }
 

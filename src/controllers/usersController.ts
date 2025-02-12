@@ -184,7 +184,7 @@ export async function requestAccountDeletion(req: Request, res: Response): Promi
             console.log(error);
             res.status(500).json({ error: "Error sending reset password email" });
         }
-        
+
     } catch (error) {
         console.error(error);
 
@@ -222,6 +222,7 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
         }
 
         user.deletedAt = new Date(Date.now());
+        user.isDeleted = true;
 
         try {
             await user.save();

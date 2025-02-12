@@ -54,4 +54,8 @@ const userSchema = new mongoose.Schema({
     },
 });
 
+const softDeletionPeriod = 60 * 5;// 5 minutes (for testing)
+
+userSchema.index({deletedAt: 1}, { expireAfterSeconds: softDeletionPeriod});
+
 export default mongoose.model("User", userSchema);

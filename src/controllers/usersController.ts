@@ -67,9 +67,9 @@ export async function getUserByToken(req: Request, res: Response): Promise<void>
 }
 
 export async function updateUser(req: Request, res: Response): Promise<void> {
-    const { email, name } = req.body;
+    const {name} = req.body;
 
-    if (!email && !name) {
+    if (!name) {
         res.status(400).json({ error: "Missing fields" });
         return;
     }
@@ -98,7 +98,6 @@ export async function updateUser(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        if (email) user.email = email;
         if (name) user.name = name;
 
         await user.save();

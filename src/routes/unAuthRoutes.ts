@@ -14,9 +14,17 @@ const unAuthRouter = Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Endpoints related to authentication
+ */
+
+/**
+ * @swagger
  * /sign-in:
  *   post:
  *     summary: Sign in a user
+ *     tags: [Auth]
  *     description: Authenticates a user and returns access and refresh tokens as cookies.
  *     requestBody:
  *       required: true
@@ -51,6 +59,7 @@ unAuthRouter.post("/sign-in", validateRequestBody(email), signIn);
  * /sign-up:
  *   post:
  *     summary: Sign up a new user
+ *     tags: [Auth]
  *     description: Registers a new user and returns access and refresh tokens as cookies.
  *     requestBody:
  *       required: true
@@ -88,6 +97,7 @@ unAuthRouter.post("/sign-up", validateRequestBody(signUpSchema), signUp);
  * /forgot-password:
  *   post:
  *     summary: Request password reset
+ *     tags: [Users]
  *     description: Sends a password reset email to the user's registered email address.
  *     requestBody:
  *       required: true
@@ -119,6 +129,7 @@ unAuthRouter.post("/forgot-password", validateRequestBody(email), forgotPassword
  * /reset-password:
  *   post:
  *     summary: Reset user password
+ *     tags: [Users]
  *     description: Resets the user's password using the token sent to their email.
  *     requestBody:
  *       required: true
@@ -154,6 +165,7 @@ unAuthRouter.post("/reset-password", resetPassword);
  * /google:
  *   get:
  *     summary: Authenticate with Google
+ *     tags: [Auth]
  *     description: Redirects the user to Google's OAuth2 login page.
  *     responses:
  *       302:
@@ -169,6 +181,7 @@ unAuthRouter.get(
  * /github:
  *   get:
  *     summary: Authenticate with GitHub
+ *     tags: [Auth]
  *     description: Redirects the user to GitHub's OAuth2 login page.
  *     responses:
  *       302:
@@ -184,6 +197,7 @@ unAuthRouter.get(
  * /google/callback:
  *   get:
  *     summary: Google OAuth2 callback
+ *     tags: [Auth]
  *     description: Handles the callback from Google OAuth2 and sets access and refresh tokens as cookies.
  *     responses:
  *       302:
@@ -225,6 +239,7 @@ unAuthRouter.get(
  * /github/callback:
  *   get:
  *     summary: GitHub OAuth2 callback
+ *     tags: [Auth]
  *     description: Handles the callback from GitHub OAuth2 and sets access and refresh tokens as cookies.
  *     responses:
  *       302:

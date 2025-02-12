@@ -7,9 +7,17 @@ const usersRouter = Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Users
+ *   description: Endpoints related to users
+ */
+
+/**
+ * @swagger
  * /users/all:
  *   get:
  *     summary: Get all users (Admin only)
+ *     tags: [Users]
  *     description: Retrieves a list of all users. Requires admin privileges.
  *     security:
  *       - bearerAuth: []
@@ -34,6 +42,7 @@ usersRouter.get("/all", isAdmin, getAllUsers);
  * /users/me:
  *   get:
  *     summary: Get current user details
+ *     tags: [Users]
  *     description: Retrieves the details of the currently authenticated user using the refresh token.
  *     responses:
  *       200:
@@ -56,6 +65,7 @@ usersRouter.get("/me", getUserByToken);
  * /users/me/update:
  *   put:
  *     summary: Update current user details
+ *     tags: [Users]
  *     description: Updates the details of the currently authenticated user.
  *     requestBody:
  *       required: true
@@ -92,6 +102,7 @@ usersRouter.put("/me/update", validateRequestBody(body), updateUser);
  * /users/me/request-account-deletion:
  *   get:
  *     summary: Request account deletion
+ *     tags: [Users]
  *     description: Sends an account deletion confirmation email to the user.
  *     responses:
  *       200:
@@ -114,6 +125,7 @@ usersRouter.get("/me/request-account-deletion", requestAccountDeletion);
  * /users/delete:
  *   delete:
  *     summary: Delete user account
+ *     tags: [Users]
  *     description: Deletes the user account using the token sent to their email.
  *     parameters:
  *       - in: query
@@ -143,6 +155,7 @@ usersRouter.delete("/delete", deleteUser);
  * /users/{id}:
  *   get:
  *     summary: Get user by ID
+ *     tags: [Users]
  *     description: Retrieves the details of a user by their ID.
  *     parameters:
  *       - in: path

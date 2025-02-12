@@ -10,9 +10,17 @@ const authRouter = Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Endpoints related to authentication
+ */
+
+/**
+ * @swagger
  * /auth/logout:
  *   get:
  *     summary: Log out the user
+ *     tags: [Auth]
  *     description: Clears the access and refresh tokens from cookies, logging the user out.
  *     responses:
  *       200:
@@ -31,6 +39,7 @@ authRouter.get("/logout", logout);
  * /auth/refresh:
  *   get:
  *     summary: Refresh access token
+ *     tags: [Auth]
  *     description: Generates a new access token using the refresh token stored in cookies.
  *     responses:
  *       200:
@@ -51,6 +60,7 @@ authRouter.get("/refresh", refresh);
  * /auth/request-email-verification:
  *   get:
  *     summary: Request email verification
+ *     tags: [Users]
  *     description: Sends a verification email to the user's registered email address.
  *     responses:
  *       200:
@@ -71,6 +81,7 @@ authRouter.get("/request-email-verification", sendVerificationEmail);
  * /auth/verify:
  *   get:
  *     summary: Verify email address
+ *     tags: [Users]
  *     description: Verifies the user's email address using the token sent to their email.
  *     parameters:
  *       - in: query

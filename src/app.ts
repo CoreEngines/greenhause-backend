@@ -40,13 +40,9 @@ try {
 
 setupSwagger(app);
 
-// app.use("/auth", appRateLimiter, unAuthRouter);
-// app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
-// app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter); Disabled for testing
-
-app.use("/auth", unAuthRouter);
-app.use("/auth", isAuthenticated, isDeleted, authRouter);
-app.use("/users", isAuthenticated, isDeleted, usersRouter);
+app.use("/auth", appRateLimiter, unAuthRouter);
+app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
+app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter); 
 
 app.get("/",  (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!"});

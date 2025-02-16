@@ -26,6 +26,7 @@ app.use(express.json());
 app.use(logger);
 app.use(errorLogger);
 app.use(cors({
+    origin: "http://localhost:3000",
     credentials: true,
 }));
 app.use(cookieParser());
@@ -40,7 +41,7 @@ try {
 
 setupSwagger(app);
 
-app.use("/auth", appRateLimiter, unAuthRouter);
+app.use("/auth",  unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
 app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter); 
 

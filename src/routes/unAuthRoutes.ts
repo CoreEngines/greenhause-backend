@@ -231,7 +231,7 @@ unAuthRouter.get(
             maxAge: refreshTokenDuration,
         });
 
-        res.redirect("/");
+        res.redirect("http://localhost:3000/");
     }
 );
 
@@ -273,7 +273,7 @@ unAuthRouter.get(
             maxAge: refreshTokenDuration,
         });
 
-        res.redirect("/");
+        res.redirect("http://localhost:3000/");
     }
 );
 

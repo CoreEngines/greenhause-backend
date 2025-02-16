@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash';
 import User from '../models/users';
 import { getEmailTemplate, sendEmail } from '../utils/email';
@@ -13,12 +13,14 @@ export async function signUp(req: Request, res: Response) {
     
     if (!name || !email || !password) {
         res.status(400).json({ error: "Please fill in all fields" });
+        return;
     }
 
     // Check if user already exists
     const user = await User.findOne({ email });
     if (user) {
         res.status(400).json({ error: "User already exists" });
+        return;
     }
 
     // hash password
@@ -377,4 +379,37 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
         console.error("Error resetting password:", error);
         res.status(500).json({ error: "Internal server error" });
     }
+}
+
+export function sendCookies(req: Request, res: Response) {
+    const { accessToken, refreshToken } = req.cookies;
+
+    let accessTokenExp = null;
+    let refreshTokenExp = null;
+
+    if (accessToken) {
+        try {
+            const decodedAccessToken = jwt.decode(accessToken) as JwtPayload;
+            accessTokenExp = decodedAccessToken?.exp ? new Date(decodedAccessToken.exp * 1000) : null;
+        } catch (error) {
+            console.error("Error decoding access token:", error);
+        }
+    }
+
+    if (refreshToken) {
+        try {
+            const decodedRefreshToken = jwt.decode(refreshToken) as JwtPayload;
+            refreshTokenExp = decodedRefreshToken?.exp ? new Date(decodedRefreshToken.exp * 1000) : null;
+        } catch (error) {
+            console.error("Error decoding refresh token:", error);
+        }
+    }
+
+    res.json({
+        cookies: req.cookies,
+        expiry: {
+            accessTokenExp,
+            refreshTokenExp,
+        },
+    });
 }

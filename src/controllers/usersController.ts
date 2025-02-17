@@ -30,15 +30,17 @@ export async function getUserById(req: Request, res: Response): Promise<void> {
 }
 
 export async function getUserByToken(req: Request, res: Response): Promise<void> {
-        const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) {
-            res.status(400).json({ error: "No refresh token provided" });
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            res.status(400).json({ error: "No access token provided" });
+            return;
         }
 
         try {
-           const payload = jwt.verify(refreshToken, process.env.JWT_RT_SECRET!) as TokenPayLoad; 
+           const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad; 
            if (!payload) {
-               res.status(400).json({ error: "Invalid refresh token" });
+               res.status(400).json({ error: "Invalid access token" });
+               return;
            }
 
            console.log(payload);
@@ -58,11 +60,13 @@ export async function getUserByToken(req: Request, res: Response): Promise<void>
            } catch (error) {
                 console.log(error);
                 res.status(500).json({ error: "Internal Server Error" });
+                return;
            }
 
         } catch (error) {
             console.log(error);
             res.status(500).json({ error: "Internal Server Error" });
+            return;
         }
 }
 

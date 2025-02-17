@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   logout,
-  refresh,
   sendVerificationEmail,
   verifyEmail,
 } from "../controllers/authController";
@@ -33,27 +32,6 @@ const authRouter = Router();
  *         description: Internal server error
  */
 authRouter.get("/logout", logout);
-
-/**
- * @swagger
- * /auth/refresh:
- *   get:
- *     summary: Refresh access token
- *     tags: [Auth]
- *     description: Generates a new access token using the refresh token stored in cookies.
- *     responses:
- *       200:
- *         description: Access token refreshed successfully
- *         content:
- *           application/json:
- *             example:
- *               message: "Access token refreshed"
- *       400:
- *         description: No refresh token provided
- *       500:
- *         description: Internal server error
- */
-authRouter.get("/refresh", refresh);
 
 /**
  * @swagger

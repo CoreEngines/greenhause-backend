@@ -129,56 +129,6 @@ export function logout(req: Request, res: Response) {
     }
 }
 
-export async function refresh(req: Request, res: Response) {
-    // Get refresh token from cookie    
-    const refreshToken = req.cookies.refreshToken;
-
-    if (!refreshToken) {
-        res.status(400).json({ error: "No refresh token provided" });
-    }
-
-    try {
-    // Check if refresh token exists and decode the token payload
-    const payload: TokenPayLoad = jwt.verify(refreshToken, process.env.JWT_RT_SECRET!) as TokenPayLoad;
-    if (!payload) {
-        res.status(400).json({ error: "Invalid refresh token" });
-    }
-    
-    const user = await User.findOne({email: payload.email});
-    if (!user) {
-        res.status(400).json({ error: "User doesn't exist" });
-        return; 
-    }
-    if (user.isDeleted) {
-        res.status(400).json({ error: "Unauthorized" });
-        return;
-    }
-
-    // Generate new access token
-    const newAccessToken = generateAccessToken({ userId: payload.userId, email: payload.email });
-    
-
-
-    // Replace access token in cookie
-    res.cookie(
-        "accessToken",
-        newAccessToken,
-        {
-            httpOnly: true,
-            sameSite: 'strict', 
-            maxAge: accessTokenDuration, 
-            expires: new Date(Date.now() + accessTokenDuration)
-        }
-    );
-
-    res.status(200).json({ message: "Access token refreshed" });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-};
-
 export async function sendVerificationEmail(req: Request, res: Response) {
     // get the access token from the cookie
     const accessToken: string = req.cookies.accessToken;

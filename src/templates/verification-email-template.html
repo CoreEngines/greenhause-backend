@@ -1,48 +1,66 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Email Verification</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        .button {
-            background-color: #007bff;
-            color: #ffffff;
-            padding: 12px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        .footer {
-            font-size: 12px;
-            color: #777;
-            margin-top: 20px;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 500px;
+        margin: 40px auto;
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      h2 {
+        color: #333;
+      }
+      .code {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+        background: #eef4ff;
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      p {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .footer {
+        font-size: 12px;
+        color: #888;
+        margin-top: 20px;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h2>Email Verification, code: {{TOKEN}}</h2>
-        <p>Thank you for signing up! Please click the button below to verify your email address:</p>
-        <a href="{{LINK}}" class="button">Verify Email</a>
-        <p>If you did not create this account, you can ignore this email.</p>
-        <p class="footer">This email was sent by MyApp. If you have any questions, contact support.</p>
-        <p>if there is any problem with the link, use this link: {{LINK}}</p>
+      <h2>
+        Your Email Verification Code:
+        <br />
+        {{TOKEN}}
+      </h2>
+      <p>Use the above code to verify your email address.</p>
+      <p>If you did not create this account, you can ignore this email.</p>
+      <p class="footer">
+        This email was sent by MyApp. If you have any questions, contact
+        support.
+      </p>
+      <p>if there is any problem with the link, use this link: {{LINK}}</p>
     </div>
-</body>
+  </body>
 </html>

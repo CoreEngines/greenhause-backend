@@ -9,11 +9,11 @@ export type Token = {
     refreshToken: string;
 }
 
-export const accessTokenDuration = 7 * 24 * 60 * 60 * 1000;  // 7 days (for testing) modify as wish
-export const accessTokenDurationString = "7d"; // 7 days (for testing) modify as wish
+export const accessTokenDuration = 24 * 60 * 60 * 1000; 
+export const accessTokenDurationString = "1d"; 
 
-export const refreshTokenDuration = 14 * 24 * 60 * 60 * 1000; // 14 days (for testing) modify as wish
-export const refreshTokenDurationString = "14d"; // 14 days (for testing) modify as wish
+export const refreshTokenDuration = 30 * 24 * 60 * 60 * 1000; 
+export const refreshTokenDurationString = "30d"; 
 
 export type TokenPayLoad = {
     userId: Types.ObjectId;

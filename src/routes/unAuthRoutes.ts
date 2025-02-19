@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { forgotPassword, resetPassword, signUp, signIn } from "../controllers/authController";
+import { forgotPassword, resetPassword, signUp, signIn, checkToken } from "../controllers/authController";
 import { validateRequestBody, signUpSchema, email } from "../validators/authValidator";
 import passport from "passport";
 import { generateAccessToken, generateRefreshToken, Token } from "../utils/jwt";
@@ -160,6 +160,39 @@ unAuthRouter.post("/forgot-password", validateRequestBody(email), forgotPassword
  *         description: Internal server error
  */
 unAuthRouter.post("/reset-password", resetPassword);
+
+/**
+ * @swagger
+ * /check-token:
+ *   post:
+ *     summary: Validate token
+ *     tags: [Users]
+ *     description: Checks the validity of a token.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "your-token"
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Token is valid"
+ *       400:
+ *         description: Token is required
+ *       401:
+ *         description: Invalid or expired token
+ *       500:
+ *         description: Internal server error
+ */
+unAuthRouter.post("/check-token", checkToken);
 
 /**
  * @swagger

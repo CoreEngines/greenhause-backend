@@ -7,6 +7,7 @@ import { generateFormattedToken } from '../utils/verificationToken';
 import VerificationToken from '../models/verificationTokens';
 import { Token, TokenPayLoad, generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { refreshTokenDuration, accessTokenDuration } from '../utils/jwt';
+import verificationTokens from '../models/verificationTokens';
 
 export async function signUp(req: Request, res: Response) {
     const { name , email, password} =  req.body;
@@ -362,4 +363,28 @@ export function sendCookies(req: Request, res: Response) {
             refreshTokenExp,
         },
     });
+}
+
+export async function checkToken(req: Request, res: Response) {
+    const accessToken = req.cookies;
+    const {tokens} = req.body;
+
+    if (!accessToken) {
+        res.status(400).json({ error: "No access token provided" });
+        return;
+    }
+
+    if (!tokens) {
+        res.status(400).json({ error: "No token provided" });
+        return;
+    }
+
+    const foundToken = await verificationTokens.findOne({ token: tokens });
+
+    if (!foundToken) {
+        res.status(400).json({ error: "token provided doesnt exist" });
+        return;
+    }
+
+    res.status(200).json({token: "valid"});
 }

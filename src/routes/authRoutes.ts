@@ -3,6 +3,7 @@ import {
   logout,
   sendVerificationEmail,
   verifyEmail,
+  checkToken,
 } from "../controllers/authController";
 
 const authRouter = Router();
@@ -83,5 +84,7 @@ authRouter.get("/request-email-verification", sendVerificationEmail);
  *         description: Internal server error
  */
 authRouter.get("/verify", verifyEmail);
+
+authRouter.post("/check_token", checkToken);
 
 export default authRouter;

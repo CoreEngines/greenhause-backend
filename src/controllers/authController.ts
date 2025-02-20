@@ -8,6 +8,9 @@ import VerificationToken from '../models/verificationTokens';
 import { Token, TokenPayLoad, generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { refreshTokenDuration, accessTokenDuration } from '../utils/jwt';
 import verificationTokens from '../models/verificationTokens';
+import path from 'path';
+import fs from "fs";
+
 
 export async function signUp(req: Request, res: Response) {
     const { name , email, password} =  req.body;
@@ -336,13 +339,23 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
             res.status(500).json({ error: "Error cleaning up token" });
             return;
         }
+        const subject: string = "Successful Password Reset";
 
+        try {
+            await sendEmail(user.email, subject,fs.readFileSync(path.join(__dirname, `../templates/successful-password-reset-template.html`), "utf8"));
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ error: "Error sending reset password email" });
+            return;
+        }
         res.status(200).json({ message: "Password reset successfully" });
+        return;
     } catch (error) {
         console.error("Error resetting password:", error);
         res.status(500).json({ error: "Internal server error" });
+        return;
     }
-}
+};
 
 export async function checkToken(req: Request, res: Response) {
     const accessToken = req.cookies;

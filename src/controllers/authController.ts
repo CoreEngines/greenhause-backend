@@ -194,7 +194,6 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         }
 
         if(token.type !== "email-verification") {
-            console.log("token verifing");
             res.status(404).json({ error: "Invalid token type" });
             return;
         }
@@ -286,100 +285,6 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
     }
 }
 
-export async function resetPassword(req: Request, res: Response): Promise<void> {
-    const resetPasswordToken = req.query.token as string;
-    const { password } = req.body;
-
-    if (!resetPasswordToken) {
-        res.status(400).json({ error: "Token is required" });
-        return;
-    }
-
-    if (!password) {
-        res.status(400).json({ error: "Password is required" });
-        return;
-    }
-
-    try {
-        const token = await VerificationToken.findOne({ token: resetPasswordToken });
-        if (!token) {
-            console.log("token check 1");
-            res.status(404).json({ error: "Invalid or expired token" });
-            return;
-        }
-
-        if(token.type !== "reset-password") {
-            console.log("token check 2");
-            res.status(404).json({ error: "Invalid token type" });
-            return;
-        }
-
-        const user = await User.findOne({ _id: token.userId });
-        if (!user) {
-            res.status(404).json({
-                error: "User associated with this token was not found. It may have been deleted or does not exist.",
-            });
-            return;
-        }
-
-        const hash = await hashPassword(password);
-        user.password = hash;
-        try {
-            await user.save();
-        } catch (error) {
-            console.error("Error saving user:", error);
-            res.status(500).json({ error: "Error updating user" });
-            return;
-        }
-
-        try {
-            await VerificationToken.deleteOne({ _id: token._id });
-        } catch (error) {
-            console.error("Error deleting token:", error);
-            res.status(500).json({ error: "Error cleaning up token" });
-            return;
-        }
-
-        res.status(200).json({ message: "Password reset successfully" });
-    } catch (error) {
-        console.error("Error resetting password:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-}
-
-export function sendCookies(req: Request, res: Response) {
-    const { accessToken, refreshToken } = req.cookies;
-
-    let accessTokenExp = null;
-    let refreshTokenExp = null;
-
-    if (accessToken) {
-        try {
-            const decodedAccessToken = jwt.decode(accessToken) as JwtPayload;
-            accessTokenExp = decodedAccessToken?.exp ? new Date(decodedAccessToken.exp * 1000) : null;
-        } catch (error) {
-            console.error("Error decoding access token:", error);
-        }
-    }
-
-    if (refreshToken) {
-        try {
-            const decodedRefreshToken = jwt.decode(refreshToken) as JwtPayload;
-            refreshTokenExp = decodedRefreshToken?.exp ? new Date(decodedRefreshToken.exp * 1000) : null;
-        } catch (error) {
-            console.error("Error decoding refresh token:", error);
-        }
-    }
-
-    res.json({
-        cookies: req.cookies,
-        expiry: {
-            accessTokenExp,
-            refreshTokenExp,
-        },
-    });
-}
-
 export async function checkToken(req: Request, res: Response) {
     const accessToken = req.cookies;
     const {token , tokenType} = req.body;
@@ -402,7 +307,6 @@ export async function checkToken(req: Request, res: Response) {
     }
 
     if (foundToken.type.toString() !== tokenType) {
-        console.log("type chwck");
         res.status(400).json({ error: "token type invalid" });
         return;
     }

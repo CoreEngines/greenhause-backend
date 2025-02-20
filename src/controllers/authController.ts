@@ -154,6 +154,7 @@ export async function sendVerificationEmail(req: Request, res: Response) {
     const verificationToken =  new VerificationToken({
         token: generateFormattedToken(),
         userId: payload.userId,
+        type: "email-verification",
     });
 
     try {
@@ -189,6 +190,12 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         const token = await VerificationToken.findOne({ token: verificationToken });
         if (!token) {
             res.status(404).json({ error: "Invalid or expired token" });
+            return;
+        }
+
+        if(token.type !== "email-verification") {
+            console.log("token verifing");
+            res.status(404).json({ error: "Invalid token type" });
             return;
         }
 
@@ -251,6 +258,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
         const resetPasswordToken = new VerificationToken({
             token: generateFormattedToken(),
             userId: user._id,
+            type: "reset-password",
         });
 
         try {
@@ -295,7 +303,14 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     try {
         const token = await VerificationToken.findOne({ token: resetPasswordToken });
         if (!token) {
+            console.log("token check 1");
             res.status(404).json({ error: "Invalid or expired token" });
+            return;
+        }
+
+        if(token.type !== "reset-password") {
+            console.log("token check 2");
+            res.status(404).json({ error: "Invalid token type" });
             return;
         }
 
@@ -367,22 +382,28 @@ export function sendCookies(req: Request, res: Response) {
 
 export async function checkToken(req: Request, res: Response) {
     const accessToken = req.cookies;
-    const {tokens} = req.body;
+    const {token , tokenType} = req.body;
 
     if (!accessToken) {
         res.status(400).json({ error: "No access token provided" });
         return;
     }
 
-    if (!tokens) {
+    if (!token) {
         res.status(400).json({ error: "No token provided" });
         return;
     }
 
-    const foundToken = await verificationTokens.findOne({ token: tokens });
+    const foundToken = await verificationTokens.findOne({ token: token });
 
     if (!foundToken) {
         res.status(400).json({ error: "token provided doesnt exist" });
+        return;
+    }
+
+    if (foundToken.type.toString() !== tokenType) {
+        console.log("type chwck");
+        res.status(400).json({ error: "token type invalid" });
         return;
     }
 

@@ -16,6 +16,11 @@ const verificationTokensSchema = new mongoose.Schema({
         default: Date.now,
         expires: 1800, // 30 minutes
     },
+    type: {
+        type: String,
+        required: true,
+        enum: ["email-verification", "reset-password"],
+    },
 });
 
 export default mongoose.model("VerificationToken", verificationTokensSchema);

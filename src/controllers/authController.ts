@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { comparePassword, hashPassword } from '../utils/hash';
 import User from '../models/users';
 import { getEmailTemplate, sendEmail } from '../utils/email';

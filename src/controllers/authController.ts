@@ -285,9 +285,68 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
     }
 }
 
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+    const resetPasswordToken = req.query.token as string;
+    const { password } = req.body;
+
+    if (!resetPasswordToken) {
+        res.status(400).json({ error: "Token is required" });
+        return;
+    }
+
+    if (!password) {
+        res.status(400).json({ error: "Password is required" });
+        return;
+    }
+
+    try {
+        const token = await VerificationToken.findOne({ token: resetPasswordToken });
+        if (!token) {
+            res.status(404).json({ error: "Invalid or expired token" });
+            return;
+        }
+
+        if(token.type !== "reset-password") {
+            res.status(404).json({ error: "Invalid token type" });
+            return;
+        }
+
+        const user = await User.findOne({ _id: token.userId });
+        if (!user) {
+            res.status(404).json({
+                error: "User associated with this token was not found. It may have been deleted or does not exist.",
+            });
+            return;
+        }
+
+        const hash = await hashPassword(password);
+        user.password = hash;
+        try {
+            await user.save();
+        } catch (error) {
+            console.error("Error saving user:", error);
+            res.status(500).json({ error: "Error updating user" });
+            return;
+        }
+
+        try {
+            await VerificationToken.deleteOne({ _id: token._id });
+        } catch (error) {
+            console.error("Error deleting token:", error);
+            res.status(500).json({ error: "Error cleaning up token" });
+            return;
+        }
+
+        res.status(200).json({ message: "Password reset successfully" });
+    } catch (error) {
+        console.error("Error resetting password:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
 export async function checkToken(req: Request, res: Response) {
     const accessToken = req.cookies;
-    const {token , tokenType} = req.body;
+    const {token, tokenType} = req.body;
 
     if (!accessToken) {
         res.status(400).json({ error: "No access token provided" });

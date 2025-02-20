@@ -10,6 +10,7 @@ import { refreshTokenDuration, accessTokenDuration } from '../utils/jwt';
 import verificationTokens from '../models/verificationTokens';
 import path from 'path';
 import fs from "fs";
+import { Passport } from 'passport';
 
 
 export async function signUp(req: Request, res: Response) {
@@ -144,11 +145,13 @@ export async function sendVerificationEmail(req: Request, res: Response) {
     if (!payload) {
         res.status(400).json({ error: "Invalid access token" });
     }   
+
     const user = await User.findOne({email: payload.email});
     if (!user) {
         res.status(400).json({ error: "User doesn't exist" });
         return; 
     }
+
     if (user.isDeleted) {
         res.status(400).json({ error: "Unauthorized" });
         return;
@@ -182,12 +185,17 @@ export async function sendVerificationEmail(req: Request, res: Response) {
 
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
     const verificationToken = req.query.token as string;
-    console.log(verificationToken);
+    const accessToken = req.cookies.accessToken;
 
     if (!verificationToken) {
         res.status(400).json({ error: "Token is required" });
         return; 
     }
+
+    const payload: TokenPayLoad = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid access token" });
+    }   
 
     try {
         const token = await VerificationToken.findOne({ token: verificationToken });
@@ -209,12 +217,18 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
             return; 
         }
 
+	if(user._id.toString() != payload.userId.toString()) {
+            res.status(404).json({ error: "Invalid or expired token" });
+            return;
+	}
+
         if (user.isVerified) {
             res.status(400).json({ message: "User already verified" });
             return; 
         }
 
         user.isVerified = true;
+
         try {
             await user.save();
         } catch (error) {

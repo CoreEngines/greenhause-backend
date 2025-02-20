@@ -30,8 +30,7 @@ const userSchema = new mongoose.Schema({
         providerId: {
             type: String,
             required: true,
-            unique: true,
-            default: false
+            default: null
         },
         providerName: {
             type: String,
@@ -57,5 +56,7 @@ const userSchema = new mongoose.Schema({
 const softDeletionPeriod = 60 * 5;// 5 minutes (for testing)
 
 userSchema.index({deletedAt: 1}, { expireAfterSeconds: softDeletionPeriod});
+
+userSchema.index({ "providers.providerId": 1 }, { unique: true, sparse: true });
 
 export default mongoose.model("User", userSchema);

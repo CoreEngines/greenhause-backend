@@ -304,35 +304,60 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
 
 export async function resetPassword(req: Request, res: Response): Promise<void> {
     const resetPasswordToken = req.query.token as string;
-    const { password } = req.body;
+    const { password, email } = req.body;
 
     if (!resetPasswordToken) {
+        console.log("token missing");
         res.status(400).json({ error: "Token is required" });
         return;
     }
 
     if (!password) {
+        console.log("[pass] missing");
         res.status(400).json({ error: "Password is required" });
+        return;
+    }
+
+    if (!email) {
+        console.log("email missing");
+        res.status(400).json({ error: "Email is required" });
         return;
     }
 
     try {
         const token = await VerificationToken.findOne({ token: resetPasswordToken });
         if (!token) {
+            console.log("Invalid or expired token");
             res.status(404).json({ error: "Invalid or expired token" });
             return;
         }
 
-        if(token.type !== "reset-password") {
+        if(token.type.toString() !== "reset-password") {
+            console.log("Invalid token type");
             res.status(404).json({ error: "Invalid token type" });
             return;
         }
 
         const user = await User.findOne({ _id: token.userId });
         if (!user) {
+            console.log("User associated with this token was not found. It may have been deleted or does not exist.");
             res.status(404).json({
                 error: "User associated with this token was not found. It may have been deleted or does not exist.",
             });
+            return;
+        }
+
+        const emailUser = await User.findOne({email});
+        if (!emailUser) {
+            console.log("User associated with this token was not found. It may have been deleted or does not exist.2");
+            res.status(404).json({
+                error: "User associated with this token was not found. It may have been deleted or does not exist.",
+            });
+            return;
+        }
+
+        if (emailUser._id.toString() != user._id.toString()) {
+            res.status(404).json({ error: "token doesnt match email" });
             return;
         }
 
@@ -385,7 +410,23 @@ export async function checkToken(req: Request, res: Response) {
         return;
     }
 
+    if (!tokenType) {
+        res.status(400).json({ error: "No token type provided" });
+        return;
+    }
+
+    // if (!email) {
+    //     res.status(400).json({ error: "No email provided" });
+    //     return;
+    // }
+
     const foundToken = await verificationTokens.findOne({ token: token });
+    // const user = await User.findOne({ email: email });
+
+    // if (!user) {
+    //     res.status(400).json({ error: "email provided doesnt exist" });
+    //     return;
+    // }
 
     if (!foundToken) {
         res.status(400).json({ error: "token provided doesnt exist" });
@@ -396,6 +437,10 @@ export async function checkToken(req: Request, res: Response) {
         res.status(400).json({ error: "token type invalid" });
         return;
     }
+
+    // if (user._id != foundToken.userId) {
+
+    // }
 
     res.status(200).json({token: "valid"});
 }

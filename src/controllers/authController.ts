@@ -1,21 +1,22 @@
-import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { comparePassword, hashPassword } from '../utils/hash';
-import User from '../models/users';
-import { getEmailTemplate, sendEmail } from '../utils/email';
-import { generateFormattedToken } from '../utils/verificationToken';
-import VerificationToken from '../models/verificationTokens';
-import { Token, TokenPayLoad, generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { refreshTokenDuration, accessTokenDuration } from '../utils/jwt';
-import verificationTokens from '../models/verificationTokens';
-import path from 'path';
-import fs from "fs";
-import { Passport } from 'passport';
-
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import { comparePassword, hashPassword } from "../utils/hash";
+import User from "../models/users";
+import { getEmailTemplate, sendEmail } from "../utils/email";
+import { generateFormattedToken } from "../utils/verificationToken";
+import VerificationToken from "../models/verificationTokens";
+import {
+    Token,
+    TokenPayLoad,
+    generateAccessToken,
+    generateRefreshToken,
+} from "../utils/jwt";
+import { refreshTokenDuration, accessTokenDuration } from "../utils/jwt";
+import verificationTokens from "../models/verificationTokens";
 
 export async function signUp(req: Request, res: Response) {
-    const { name , email, password} =  req.body;
-    
+    const { name, email, password } = req.body;
+
     if (!name || !email || !password) {
         res.status(400).json({ error: "Please fill in all fields" });
         return;
@@ -29,39 +30,41 @@ export async function signUp(req: Request, res: Response) {
     }
 
     // hash password
-    const hash = await hashPassword(password); 
+    const hash = await hashPassword(password);
 
-    // Create new user        
+    // Create new user
     const newUser = new User({
         name,
-        email, 
-        password: hash 
+        email,
+        password: hash,
     });
 
     const token: Token = {
-        accessToken: generateAccessToken({ userId: newUser._id, email: newUser.email }),
-        refreshToken: generateRefreshToken({ userId: newUser._id, email: newUser.email }),
+        accessToken: generateAccessToken({
+            userId: newUser._id,
+            email: newUser.email,
+        }),
+        refreshToken: generateRefreshToken({
+            userId: newUser._id,
+            email: newUser.email,
+        }),
     };
 
     try {
         await newUser.save();
-        
-        res.cookie("accessToken", token.accessToken,
-            { 
-                httpOnly: true,
-                sameSite: 'strict', 
-                maxAge: accessTokenDuration,
-                expires: new Date(Date.now() + accessTokenDuration)
-            }
-        );
-        res.cookie("refreshToken", token.refreshToken,
-            { 
-                httpOnly: true,
-                sameSite: 'strict', 
-                maxAge: refreshTokenDuration, 
-                expires: new Date(Date.now() + refreshTokenDuration)
-            }
-        );
+
+        res.cookie("accessToken", token.accessToken, {
+            httpOnly: true,
+            sameSite: "strict",
+            maxAge: accessTokenDuration,
+            expires: new Date(Date.now() + accessTokenDuration),
+        });
+        res.cookie("refreshToken", token.refreshToken, {
+            httpOnly: true,
+            sameSite: "strict",
+            maxAge: refreshTokenDuration,
+            expires: new Date(Date.now() + refreshTokenDuration),
+        });
 
         res.status(201).json({
             message: "User created successfully",
@@ -77,14 +80,14 @@ export async function signIn(req: Request, res: Response): Promise<void> {
 
     if (!email || !password) {
         res.status(400).json({ error: "Please fill in all fields" });
-        return; 
+        return;
     }
 
     try {
         const user = await User.findOne({ email });
         if (!user) {
             res.status(400).json({ error: "User doesn't exist" });
-            return; 
+            return;
         }
         if (user.isDeleted) {
             res.status(400).json({ error: "Unauthorized" });
@@ -93,24 +96,30 @@ export async function signIn(req: Request, res: Response): Promise<void> {
         const match = await comparePassword(password, user.password);
         if (!match) {
             res.status(400).json({ error: "Invalid credentials" });
-            return; 
+            return;
         }
 
         const token: Token = {
-            accessToken: generateAccessToken({ userId: user._id, email: user.email }),
-            refreshToken: generateRefreshToken({ userId: user._id, email: user.email }),
+            accessToken: generateAccessToken({
+                userId: user._id,
+                email: user.email,
+            }),
+            refreshToken: generateRefreshToken({
+                userId: user._id,
+                email: user.email,
+            }),
         };
 
         res.cookie("accessToken", token.accessToken, {
             httpOnly: true,
-            sameSite: 'strict',
-            maxAge: accessTokenDuration, 
+            sameSite: "strict",
+            maxAge: accessTokenDuration,
             expires: new Date(Date.now() + accessTokenDuration),
         });
         res.cookie("refreshToken", token.refreshToken, {
             httpOnly: true,
-            sameSite: 'strict',
-            maxAge: refreshTokenDuration, 
+            sameSite: "strict",
+            maxAge: refreshTokenDuration,
             expires: new Date(Date.now() + refreshTokenDuration),
         });
 
@@ -125,8 +134,8 @@ export async function signIn(req: Request, res: Response): Promise<void> {
 
 export function logout(req: Request, res: Response) {
     try {
-        res.clearCookie('accessToken');
-        res.clearCookie('refreshToken');
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
         res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
         console.log(error);
@@ -141,15 +150,18 @@ export async function sendVerificationEmail(req: Request, res: Response) {
         res.status(400).json({ error: "No access token provided" });
     }
 
-    const payload: TokenPayLoad = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
     if (!payload) {
         res.status(400).json({ error: "Invalid access token" });
-    }   
+    }
 
-    const user = await User.findOne({email: payload.email});
+    const user = await User.findOne({ email: payload.email });
     if (!user) {
         res.status(400).json({ error: "User doesn't exist" });
-        return; 
+        return;
     }
 
     if (user.isDeleted) {
@@ -157,7 +169,7 @@ export async function sendVerificationEmail(req: Request, res: Response) {
         return;
     }
 
-    const verificationToken =  new VerificationToken({
+    const verificationToken = new VerificationToken({
         token: generateFormattedToken(),
         userId: payload.userId,
         type: "email-verification",
@@ -171,7 +183,11 @@ export async function sendVerificationEmail(req: Request, res: Response) {
     }
 
     const verificationTokenLink: string = `http://localhost:${process.env.PORT}/auth/verify?token=${verificationToken.token}`;
-    const emailBody = getEmailTemplate(verificationTokenLink, verificationToken.token, "verification-email-template");
+    const emailBody = getEmailTemplate(
+        "verification-email-template",
+        verificationTokenLink,
+        verificationToken.token
+    );
     const subject: string = "Email Verification";
 
     try {
@@ -181,7 +197,7 @@ export async function sendVerificationEmail(req: Request, res: Response) {
         console.log(error);
         res.status(500).json({ error: "Error sending verification email" });
     }
-};
+}
 
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
     const verificationToken = req.query.token as string;
@@ -189,22 +205,27 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
 
     if (!verificationToken) {
         res.status(400).json({ error: "Token is required" });
-        return; 
+        return;
     }
 
-    const payload: TokenPayLoad = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
     if (!payload) {
         res.status(400).json({ error: "Invalid access token" });
-    }   
+    }
 
     try {
-        const token = await VerificationToken.findOne({ token: verificationToken });
+        const token = await VerificationToken.findOne({
+            token: verificationToken,
+        });
         if (!token) {
             res.status(404).json({ error: "Invalid or expired token" });
             return;
         }
 
-        if(token.type !== "email-verification") {
+        if (token.type !== "email-verification") {
             res.status(404).json({ error: "Invalid token type" });
             return;
         }
@@ -214,17 +235,17 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
             res.status(404).json({
                 error: "User associated with this token was not found. It may have been deleted or does not exist.",
             });
-            return; 
+            return;
         }
 
-	if(user._id.toString() != payload.userId.toString()) {
+        if (user._id.toString() != payload.userId.toString()) {
             res.status(404).json({ error: "Invalid or expired token" });
             return;
-	}
+        }
 
         if (user.isVerified) {
             res.status(400).json({ message: "User already verified" });
-            return; 
+            return;
         }
 
         user.isVerified = true;
@@ -234,7 +255,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
         } catch (error) {
             console.error("Error saving user:", error);
             res.status(500).json({ error: "Error updating user" });
-            return; 
+            return;
         }
 
         try {
@@ -252,7 +273,10 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     }
 }
 
-export async function forgotPassword(req: Request, res: Response): Promise<void> {
+export async function forgotPassword(
+    req: Request,
+    res: Response
+): Promise<void> {
     const { email } = req.body;
     console.log(email);
     if (!email) {
@@ -281,12 +305,18 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
             await resetPasswordToken.save();
         } catch (error) {
             console.log(error);
-            res.status(500).json({ error: "Error saving reset password token" });
+            res.status(500).json({
+                error: "Error saving reset password token",
+            });
             return;
         }
 
         const resetPasswordLink: string = `http://localhost:${process.env.PORT}/auth/reset-password?token=${resetPasswordToken.token}`;
-        const emailBody = getEmailTemplate(resetPasswordLink, resetPasswordToken.token, "forgot-password-template");
+        const emailBody = getEmailTemplate(
+            "forgot-password-template",
+            resetPasswordLink,
+            resetPasswordToken.token
+        );
         const subject: string = "Reset Password";
 
         try {
@@ -294,7 +324,9 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
             res.status(200).json({ message: "Reset password email sent" });
         } catch (error) {
             console.log(error);
-            res.status(500).json({ error: "Error sending reset password email" });
+            res.status(500).json({
+                error: "Error sending reset password email",
+            });
         }
     } catch (error) {
         console.error("Error saving reset password token:", error);
@@ -302,7 +334,10 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
     }
 }
 
-export async function resetPassword(req: Request, res: Response): Promise<void> {
+export async function resetPassword(
+    req: Request,
+    res: Response
+): Promise<void> {
     const resetPasswordToken = req.query.token as string;
     const { password, email } = req.body;
 
@@ -325,14 +360,16 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     }
 
     try {
-        const token = await VerificationToken.findOne({ token: resetPasswordToken });
+        const token = await VerificationToken.findOne({
+            token: resetPasswordToken,
+        });
         if (!token) {
             console.log("Invalid or expired token");
             res.status(404).json({ error: "Invalid or expired token" });
             return;
         }
 
-        if(token.type.toString() !== "reset-password") {
+        if (token.type.toString() !== "reset-password") {
             console.log("Invalid token type");
             res.status(404).json({ error: "Invalid token type" });
             return;
@@ -340,16 +377,20 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
 
         const user = await User.findOne({ _id: token.userId });
         if (!user) {
-            console.log("User associated with this token was not found. It may have been deleted or does not exist.");
+            console.log(
+                "User associated with this token was not found. It may have been deleted or does not exist."
+            );
             res.status(404).json({
                 error: "User associated with this token was not found. It may have been deleted or does not exist.",
             });
             return;
         }
 
-        const emailUser = await User.findOne({email});
+        const emailUser = await User.findOne({ email });
         if (!emailUser) {
-            console.log("User associated with this token was not found. It may have been deleted or does not exist.2");
+            console.log(
+                "User associated with this token was not found. It may have been deleted or does not exist.2"
+            );
             res.status(404).json({
                 error: "User associated with this token was not found. It may have been deleted or does not exist.",
             });
@@ -378,13 +419,20 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
             res.status(500).json({ error: "Error cleaning up token" });
             return;
         }
+
         const subject: string = "Successful Password Reset";
 
         try {
-            await sendEmail(user.email, subject,fs.readFileSync(path.join(__dirname, `../templates/successful-password-reset-template.html`), "utf8"));
+            await sendEmail(
+                user.email,
+                subject,
+                getEmailTemplate("successful-password-reset-template")
+            );
         } catch (error) {
             console.log(error);
-            res.status(500).json({ error: "Error sending reset password email" });
+            res.status(500).json({
+                error: "Error sending reset password email",
+            });
             return;
         }
         res.status(200).json({ message: "Password reset successfully" });
@@ -394,11 +442,11 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
         res.status(500).json({ error: "Internal server error" });
         return;
     }
-};
+}
 
 export async function checkToken(req: Request, res: Response) {
     const accessToken = req.cookies;
-    const {token, tokenType} = req.body;
+    const { token, tokenType } = req.body;
 
     if (!accessToken) {
         res.status(400).json({ error: "No access token provided" });
@@ -415,18 +463,7 @@ export async function checkToken(req: Request, res: Response) {
         return;
     }
 
-    // if (!email) {
-    //     res.status(400).json({ error: "No email provided" });
-    //     return;
-    // }
-
     const foundToken = await verificationTokens.findOne({ token: token });
-    // const user = await User.findOne({ email: email });
-
-    // if (!user) {
-    //     res.status(400).json({ error: "email provided doesnt exist" });
-    //     return;
-    // }
 
     if (!foundToken) {
         res.status(400).json({ error: "token provided doesnt exist" });
@@ -438,9 +475,5 @@ export async function checkToken(req: Request, res: Response) {
         return;
     }
 
-    // if (user._id != foundToken.userId) {
-
-    // }
-
-    res.status(200).json({token: "valid"});
+    res.status(200).json({ token: "valid" });
 }

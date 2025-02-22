@@ -19,7 +19,7 @@ const verificationTokensSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ["email-verification", "reset-password"],
+        enum: ["email-verification", "reset-password", "delete-account"],
     },
 });
 

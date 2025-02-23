@@ -9,10 +9,10 @@ import {
     Token,
     TokenPayLoad,
     generateAccessToken,
+    refreshTokenDuration,
+    accessTokenDuration,
     generateRefreshToken,
 } from "../utils/jwt";
-import { refreshTokenDuration, accessTokenDuration } from "../utils/jwt";
-import verificationTokens from "../models/verificationTokens";
 
 export async function signUp(req: Request, res: Response) {
     const { name, email, password } = req.body;
@@ -463,7 +463,7 @@ export async function checkToken(req: Request, res: Response) {
         return;
     }
 
-    const foundToken = await verificationTokens.findOne({ token: token });
+    const foundToken = await VerificationToken.findOne({ token: token });
 
     if (!foundToken) {
         res.status(400).json({ error: "token provided doesnt exist" });

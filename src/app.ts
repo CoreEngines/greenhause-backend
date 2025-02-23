@@ -25,10 +25,12 @@ connectDB();
 app.use(express.json());
 app.use(logger);
 app.use(errorLogger);
-app.use(cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-}));
+app.use(
+    cors({
+        origin: "http://localhost:3000",
+        credentials: true,
+    })
+);
 app.use(cookieParser());
 
 try {
@@ -36,17 +38,19 @@ try {
     app.use(passportConfig.initialize());
 } catch (error) {
     console.error("[ERROR]: Failed to set up OAuth strategies:", error);
-    throw new Error("Failed to set up OAuth strategies. Check your configuration and environment variables.");
+    throw new Error(
+        "Failed to set up OAuth strategies. Check your configuration and environment variables."
+    );
 }
 
 setupSwagger(app);
 
-app.use("/auth",  unAuthRouter);
+app.use("/auth", appRateLimiter, unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
-app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter); 
+app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter);
 
-app.get("/",  (req: Request, res: Response) => {
-    res.status(200).json({ message: "Hello, World!"});
+app.get("/", (req: Request, res: Response) => {
+    res.status(200).json({ message: "Hello, World!" });
 });
 
 app.listen(PORT, () => {

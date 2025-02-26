@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { comparePassword, hashPassword } from "../utils/hash";
 import User from "../models/users";
+import Manager from "../models/managers";
 import { getEmailTemplate, sendEmail } from "../utils/email";
 import { generateFormattedToken } from "../utils/verificationToken";
 import VerificationToken from "../models/verificationTokens";
@@ -37,6 +38,7 @@ export async function signUp(req: Request, res: Response) {
         name,
         email,
         password: hash,
+        role: "manager",
     });
 
     const token: Token = {
@@ -51,7 +53,12 @@ export async function signUp(req: Request, res: Response) {
     };
 
     try {
-        await newUser.save();
+        const manager = new Manager({
+            userId: newUser._id,
+        })
+
+        await Promise.all([newUser.save(), manager.save()]);
+
 
         res.cookie("accessToken", token.accessToken, {
             httpOnly: true,
@@ -123,8 +130,16 @@ export async function signIn(req: Request, res: Response): Promise<void> {
             expires: new Date(Date.now() + refreshTokenDuration),
         });
 
+        // Role-based redirects
+        const redirectMap: Record<string, string> = {
+            manager: "http://localhost:3000/manager",
+            farmer: "http://localhost:3000/farmer",
+            technician: "http://localhost:3000/technician",
+        };
+        
         res.status(200).json({
             message: "User logged in successfully",
+            redirectUrl: redirectMap[user.role] || "",
         });
     } catch (error) {
         console.error("Error logging in user:", error);

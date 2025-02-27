@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/users";
+import Manager from "../models/managers";
 import jwt from "jsonwebtoken";
 import { TokenPayLoad } from "../utils/jwt";
 import { Types } from "mongoose";
@@ -29,10 +30,22 @@ export async function getUserById(req: Request, res: Response): Promise<void> {
     }
 }
 
-export async function getUserByToken(
-    req: Request,
-    res: Response
-): Promise<void> {
+// Define an interface for ManagerDetails
+interface ManagerDetails {
+    organization?: string;
+    phone?: string;
+    officeAddress?: string;
+    userId: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// Define an extended user type that includes managerDetails
+interface UserWithManager extends Omit<InstanceType<typeof User>, "toObject"> {
+    managerDetails?: ManagerDetails;
+}
+
+export async function getUserByToken(req: Request, res: Response): Promise<void> {
     const accessToken = req.cookies.accessToken;
     if (!accessToken) {
         res.status(400).json({ error: "No access token provided" });
@@ -40,38 +53,41 @@ export async function getUserByToken(
     }
 
     try {
-        const payload = jwt.verify(
-            accessToken,
-            process.env.JWT_AT_SECRET!
-        ) as TokenPayLoad;
-        if (!payload) {
+        const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as { userId: string };
+        if (!payload || !Types.ObjectId.isValid(payload.userId)) {
             res.status(400).json({ error: "Invalid access token" });
             return;
         }
 
-        console.log(payload);
-        if (!Types.ObjectId.isValid(payload.userId)) {
-            res.status(400).json({ error: "Invalid user id" });
+        const user = await User.findById(payload.userId).select("-password");
+        if (!user) {
+            res.status(404).json({ error: "User not found" });
             return;
         }
 
-        try {
-            const user = await User.findById(payload.userId);
-            if (!user) {
-                res.status(404).json({ error: "User not found" });
-                return;
+        const userData: UserWithManager = user.toObject() as UserWithManager;
+
+        if (user.role === "manager") {
+            const manager = await Manager.findOne({ userId: user._id }).lean();
+            
+            if (manager) {
+                userData.managerDetails = {
+                    organization: manager.organization ?? undefined,
+                    phone: manager.phone ?? undefined,
+                    officeAddress: manager.officeAddress ?? undefined,
+                    userId: manager.userId,
+                    createdAt: manager.createdAt,
+                    updatedAt: manager.updatedAt,
+                };
+            } else {
+                userData.managerDetails = undefined;
             }
-
-            res.status(200).json(user);
-        } catch (error) {
-            console.log(error);
-            res.status(500).json({ error: "Internal Server Error" });
-            return;
         }
+
+        res.status(200).json(userData);
     } catch (error) {
-        console.log(error);
+        console.error("Error fetching user:", error);
         res.status(500).json({ error: "Internal Server Error" });
-        return;
     }
 }
 

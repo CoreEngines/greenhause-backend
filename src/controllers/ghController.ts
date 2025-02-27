@@ -1,0 +1,131 @@
+import jwt from "jsonwebtoken";
+import { Request, Response } from "express";
+import User from "../models/users";
+import Manager from "../models/managers";
+import GreenHouse from "../models/greenHouses";
+import { TokenPayLoad } from "../utils/jwt";
+
+// create a green house
+export async function createGreenHouse(
+    req: Request,
+    res: Response
+): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({ error: "No access token provided" });
+        return;
+    }
+
+    const { plantType, name, location } = req.body;
+    if (!plantType || !name || !location) {
+        res.status(400).json({ error: "Missing fields" });
+        return;
+    }
+
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid access token" });
+        return;
+    }
+
+    const user = await User.findOne({ email: payload.email });
+    if (!user) {
+        res.status(400).json({ error: "User doesn't exist" });
+        return;
+    }
+
+    if (user.isDeleted) {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    if (user.role !== "manager") {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    const manager = await Manager.findOne({ userId: user._id });
+    if (!manager) {
+        res.status(400).json({ error: "Manager doesn't exist" });
+        return;
+    }
+    console.log(manager._id);
+
+    const greenHouse = new GreenHouse({
+        location: location,
+        name: name,
+        plantType: plantType,
+        managerId: manager._id,
+    });
+
+    await greenHouse.save();
+
+
+    res.status(200).json(greenHouse);
+    return;
+}
+
+// get all green houses
+export async function getAllGreenHouses(
+    req: Request,
+    res: Response
+): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({ error: "No access token provided" });
+        return;
+    }
+
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid access token" });
+        return;
+    }
+
+    const user = await User.findOne({ email: payload.email });
+    if (!user) {
+        res.status(400).json({ error: "User doesn't exist" });
+        return;
+    }
+
+    if (user.isDeleted) {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    if (user.role !== "manager") {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    const manager = await Manager.findOne({ userId: user._id });
+    if (!manager) {
+        res.status(400).json({ error: "Manager doesn't exist" });
+        return;
+    }
+
+    console.log(manager._id);
+
+    const greenHouses = await GreenHouse.find({ managerId: manager._id });
+    if (!greenHouses) {
+        res.status(400).json({ error: "No green houses found" });
+        return;
+    }
+
+    console.log(greenHouses);
+
+    res.status(200).json(greenHouses);
+    return;
+}
+
+// delete a green house
+
+
+
+// update a green house

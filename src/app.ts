@@ -14,6 +14,7 @@ import { isAuthenticated, isDeleted } from "./middlewares/authMiddleware";
 import { appRateLimiter } from "./middlewares/rateLimiter";
 import usersRouter from "./routes/usersRoutes";
 import { setupSwagger } from "./config/swagger";
+import ghRouter from "./routes/ghRoutes";
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ setupSwagger(app);
 app.use("/auth", appRateLimiter, unAuthRouter);
 app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
 app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter);
+app.use("/green-houses", appRateLimiter, isAuthenticated, isDeleted, ghRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!" });

@@ -57,6 +57,10 @@ export async function signUp(req: Request, res: Response) {
             userId: newUser._id,
         })
 
+        newUser.avatar = `https://avatar.iran.liara.run/public/boy?username=${newUser._id}`; // ✅ Set avatar field
+        await newUser.save(); // ✅ Save updated user
+        
+
         await Promise.all([newUser.save(), manager.save()]);
 
 

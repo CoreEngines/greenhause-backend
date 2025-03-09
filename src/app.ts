@@ -11,10 +11,10 @@ import { logger } from "./middlewares/logger";
 import { errorLogger } from "./middlewares/errorLogger";
 import { connectDB } from "./config/dbConnection";
 import { isAuthenticated, isDeleted } from "./middlewares/authMiddleware";
-import { appRateLimiter } from "./middlewares/rateLimiter";
 import usersRouter from "./routes/usersRoutes";
 import { setupSwagger } from "./config/swagger";
 import ghRouter from "./routes/ghRoutes";
+import managerRoutes from "./routes/managerRoutes";
 
 dotenv.config();
 
@@ -46,10 +46,11 @@ try {
 
 setupSwagger(app);
 
-app.use("/auth", appRateLimiter, unAuthRouter);
-app.use("/auth", appRateLimiter, isAuthenticated, isDeleted, authRouter);
-app.use("/users", appRateLimiter, isAuthenticated, isDeleted, usersRouter);
-app.use("/green-houses", appRateLimiter, isAuthenticated, isDeleted, ghRouter);
+app.use("/auth",  unAuthRouter);
+app.use("/auth",  isAuthenticated, isDeleted, authRouter);
+app.use("/users",  isAuthenticated, isDeleted, usersRouter);
+app.use("/green-houses",  isAuthenticated, isDeleted, ghRouter);
+app.use("/manager", isAuthenticated, isDeleted ,managerRoutes);
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({ message: "Hello, World!" });

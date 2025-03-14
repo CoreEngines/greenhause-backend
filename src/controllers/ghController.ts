@@ -125,7 +125,62 @@ export async function getAllGreenHouses(
 }
 
 // delete a green house
+export async function deleteGreenHouse(req: Request, res: Response){
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({ error: "No access token provided" });
+        return;
+    }
 
+    const { id } = req.body;
+    if (!id) {
+        res.status(400).json({ error: "Missing id" });
+        return;
+    }
 
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid access token" });
+        return;
+    }
 
-// update a green house
+    const user = await User.findOne({ email: payload.email });
+    if (!user) {
+        res.status(400).json({ error: "User doesn't exist" });
+        return;
+    }
+
+    if (user.role !== "manager") {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    const manager = await Manager.findOne({ userId: user._id });
+    if (!manager) {
+        res.status(400).json({ error: "Manager doesn't exist" });
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findOne({ _id: id });
+    if (!greenHouse) {
+        res.status(400).json({ error: "Green house doesn't exist" });
+        return;
+    }
+
+    if (greenHouse.managerId.toString() !== manager._id.toString()) {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    greenHouse.deletedAt = new Date(Date.now());
+    greenHouse.isDeleted = true;
+    await greenHouse.save();
+
+    res.status(200).json(greenHouse);
+    return;
+
+}
+

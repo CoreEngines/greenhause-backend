@@ -5,6 +5,24 @@ const ghRouter = Router();
 
 ghRouter.post("/create", createGreenHouse);
 
+/**
+ * @swagger
+ * /green-houses/update:
+ *   post:
+ *     summary: Update a green house
+ *     tags: [Greenhouse]
+ *     description: let's the manager update greenhouses that they own
+ *     responses:
+ *       200:
+ *         description: green house updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Green house updated successfully"
+ *       500:
+ *         description: Internal server error
+ */
+ghRouter.post("/update", updateGreenHouse);
 
 /**
  * @swagger

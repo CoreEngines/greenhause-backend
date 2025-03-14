@@ -32,8 +32,21 @@ const greenHouseSchema = new mongoose.Schema(
             required: false,
             default: 0,
         },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
+        deletedAt: {
+            type: Date,
+            default: null,
+        },
     },
     { timestamps: true }
 );
+
+
+const softDeletionPeriod = 60 * 5; // 5 minutes (for testing)
+
+greenHouseSchema.index({ deletedAt: 1 }, { expireAfterSeconds: softDeletionPeriod });
 
 export default mongoose.model("GreenHouse", greenHouseSchema);

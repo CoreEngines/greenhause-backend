@@ -20,8 +20,14 @@ const managerSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
+        greenHouseIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "GreenHouse",
+            }
+        ],
     },
-    { timestamps: true }
+    {timestamps: true}
 );
 
 export default mongoose.model("Manager", managerSchema);

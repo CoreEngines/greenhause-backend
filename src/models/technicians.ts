@@ -8,12 +8,12 @@ const technicianSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        greenHouseId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "GreenHouse",
-            required: true,
-            unique: true,
-        },
+        greenHouseIds: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "GreenHouse",
+            },
+        ],
     },
     { timestamps: true }
 );

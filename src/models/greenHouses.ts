@@ -27,7 +27,19 @@ const greenHouseSchema = new mongoose.Schema(
             enum: ["active", "inActive"],
             default: "active",
         },
-        staffCounf: {
+        farmers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Farmer",
+            },
+        ],
+        technicians: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Technician",
+            },
+        ],
+        staffCount: {
             type: Number,
             required: false,
             default: 0,
@@ -41,12 +53,27 @@ const greenHouseSchema = new mongoose.Schema(
             default: null,
         },
     },
-    { timestamps: true }
+    {timestamps: true}
 );
 
 
 const softDeletionPeriod = 60 * 5; // 5 minutes (for testing)
+greenHouseSchema.index({deletedAt: 1}, {expireAfterSeconds: softDeletionPeriod});
 
-greenHouseSchema.index({ deletedAt: 1 }, { expireAfterSeconds: softDeletionPeriod });
+
+greenHouseSchema.pre("save", function (next) {
+    this.staffCount = (this.farmers?.length || 0) + (this.technicians?.length || 0);
+    next();
+});
+
+greenHouseSchema.post("findOneAndUpdate", async function (doc) {
+    if (doc) {
+        const updatedGreenHouse = await mongoose.model("GreenHouse").findById(doc._id);
+        if (updatedGreenHouse) {
+            updatedGreenHouse.staffCount = (updatedGreenHouse.farmers?.length || 0) + (updatedGreenHouse.technicians?.length || 0);
+            await updatedGreenHouse.save();
+        }
+    }
+});
 
 export default mongoose.model("GreenHouse", greenHouseSchema);

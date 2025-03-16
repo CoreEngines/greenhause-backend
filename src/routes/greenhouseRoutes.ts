@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { createGreenHouse, deleteGreenHouse, getAllGreenHouses, updateGreenHouse } from "../controllers/ghController";
+import {
+    createGreenHouse,
+    deleteGreenHouse,
+    getGreenHouses,
+    updateGreenHouse
+} from "../controllers/greenhouseController";
 
 const ghRouter = Router();
 
@@ -43,6 +48,6 @@ ghRouter.post("/update", updateGreenHouse);
  */
 ghRouter.post("/delete", deleteGreenHouse);
 
-ghRouter.get("/all", getAllGreenHouses);
+ghRouter.get("/all", getGreenHouses);
 
 export default ghRouter;

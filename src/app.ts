@@ -13,7 +13,7 @@ import { connectDB } from "./config/dbConnection";
 import { isAuthenticated, isDeleted } from "./middlewares/authMiddleware";
 import usersRouter from "./routes/usersRoutes";
 import { setupSwagger } from "./config/swagger";
-import ghRouter from "./routes/ghRoutes";
+import ghRouter from "./routes/greenhouseRoutes";
 import managerRoutes from "./routes/managerRoutes";
 
 dotenv.config();

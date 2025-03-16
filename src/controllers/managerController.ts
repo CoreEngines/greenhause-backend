@@ -7,6 +7,7 @@ import Manager from "../models/managers";
 import Greenhouse from "../models/greenHouses";
 import Technician from "../models/technicians";
 import {hashPassword} from "../utils/hash";
+import mongoose from "mongoose";
 
 export async function AddFarmer(req: Request, res: Response): Promise<void> {
     try {
@@ -26,12 +27,7 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
         }
 
         const user = await User.findOne({email: payload.email});
-        if (!user || user.isDeleted) {
-            res.status(400).json({error: "Unauthorized"});
-            return;
-        }
-
-        if (user.role !== "manager") {
+        if (!user || user.isDeleted || user.role !== "manager") {
             res.status(400).json({error: "Unauthorized"});
             return;
         }
@@ -45,7 +41,7 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
         const {farmerName, farmerEmail, greenHouseId} = req.body;
         if (!farmerEmail || !greenHouseId || !farmerName) {
             res.status(400).json({
-                error: "Missing farmer name, email or greenhouse ID",
+                error: "Missing farmer name, email, or greenhouse ID",
             });
             return;
         }
@@ -53,12 +49,15 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
         let farmerUser = await User.findOne({email: farmerEmail});
 
         if (!farmerUser) {
-            // Generate random password
+            // Generate a random password for a new user
+            // Use the following hardcoded password for testing purposes (Uncomment if needed)
+            // const randomPassword = "aptget123";
             const randomPassword = Math.random().toString(36).slice(-8);
             console.log(randomPassword);
+
             const hashedPassword = await hashPassword(randomPassword);
 
-            // Create new farmer user
+            // Create a new farmer user
             farmerUser = new User({
                 name: farmerName,
                 email: farmerEmail,
@@ -70,36 +69,53 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
             await farmerUser.save();
         }
 
-        // Check if the farmer is already assigned to the greenhouse
-        const existingFarmer = await Farmer.findOne({
-            userId: farmerUser._id,
-            greenHouseId,
-        });
+        farmerUser.avatar = `https://avatar.iran.liara.run/public/boy?username=${farmerUser._id}`;
+        await farmerUser.save();
 
-        if (existingFarmer) {
-            res.status(400).json({
-                error: "Farmer is already in the greenhouse",
+        // Find or create the farmer record
+        let farmer = await Farmer.findOne({userId: farmerUser._id});
+
+        if (farmer) {
+            // Check if the farmer is already assigned to the greenhouse
+            if (farmer.greenHouseIds.includes(greenHouseId)) {
+                res.status(400).json({error: "Farmer is already in the greenhouse"});
+                return;
+            }
+
+            // Add the new greenhouse ID to the farmer's list
+            farmer.greenHouseIds.push(greenHouseId);
+            await farmer.save();
+        } else {
+            // Create a new farmer record
+            farmer = new Farmer({
+                userId: farmerUser._id,
+                greenHouseIds: [greenHouseId],
             });
+            await farmer.save();
+        }
+
+        // Update the GreenHouse document to include the farmer
+        const greenHouse = await Greenhouse.findById(greenHouseId);
+        if (!greenHouse) {
+            res.status(400).json({error: "Greenhouse not found"});
             return;
         }
 
-        // Assign farmer to greenhouse
-        const newFarmer = new Farmer({
-            userId: farmerUser._id,
-            greenHouseId,
-        });
+        if (!greenHouse.farmers.includes(farmer._id)) {
+            greenHouse.farmers.push(farmer._id);
+        }
 
-        await newFarmer.save();
+        // Update staff count before saving
+        greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
+        await greenHouse.save();
 
         res.status(201).json({
             message: "Farmer added successfully",
             farmer: farmerUser,
         });
-        return;
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Internal server error"});
-        return;
     }
 }
 
@@ -121,12 +137,7 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
         }
 
         const user = await User.findOne({email: payload.email});
-        if (!user || user.isDeleted) {
-            res.status(400).json({error: "Unauthorized"});
-            return;
-        }
-
-        if (user.role !== "manager") {
+        if (!user || user.isDeleted || user.role !== "manager") {
             res.status(400).json({error: "Unauthorized"});
             return;
         }
@@ -140,7 +151,7 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
         const {technicianName, technicianEmail, greenHouseId} = req.body;
         if (!technicianEmail || !greenHouseId || !technicianName) {
             res.status(400).json({
-                error: "Missing technician name, email or greenhouse ID",
+                error: "Missing technician name, email, or greenhouse ID",
             });
             return;
         }
@@ -148,12 +159,12 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
         let technicianUser = await User.findOne({email: technicianEmail});
 
         if (!technicianUser) {
-            // Generate random password
+            // Generate a random password for a new user
             const randomPassword = Math.random().toString(36).slice(-8);
             console.log(randomPassword);
             const hashedPassword = await hashPassword(randomPassword);
 
-            // Create new technician user
+            // Create a new technician user
             technicianUser = new User({
                 name: technicianName,
                 email: technicianEmail,
@@ -165,36 +176,53 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
             await technicianUser.save();
         }
 
-        // Check if the technician is already assigned to the greenhouse
-        const existingTechnician = await Technician.findOne({
-            userId: technicianUser._id,
-            greenHouseId,
-        });
+        technicianUser.avatar = `https://avatar.iran.liara.run/public/boy?username=${technicianUser._id}`;
+        await technicianUser.save();
 
-        if (existingTechnician) {
-            res.status(400).json({
-                error: "Technician is already in the greenhouse",
+        // Find or create the technician record
+        let technician = await Technician.findOne({userId: technicianUser._id});
+
+        if (technician) {
+            // Check if the technician is already assigned to the greenhouse
+            if (technician.greenHouseIds.includes(greenHouseId)) {
+                res.status(400).json({error: "Technician is already in the greenhouse"});
+                return;
+            }
+
+            // Add the new greenhouse ID to the technician's list
+            technician.greenHouseIds.push(greenHouseId);
+            await technician.save();
+        } else {
+            // Create a new technician record
+            technician = new Technician({
+                userId: technicianUser._id,
+                greenHouseIds: [greenHouseId],
             });
+            await technician.save();
+        }
+
+        // Update the GreenHouse document to include the technician
+        const greenHouse = await Greenhouse.findById(greenHouseId);
+        if (!greenHouse) {
+            res.status(400).json({error: "Greenhouse not found"});
             return;
         }
 
-        // Assign technician to greenhouse
-        const newTechnician = new Technician({
-            userId: technicianUser._id,
-            greenHouseId,
-        });
+        if (!greenHouse.technicians.includes(technician._id)) {
+            greenHouse.technicians.push(technician._id);
+        }
 
-        await newTechnician.save();
+        // Update staff count before saving
+        greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
+        await greenHouse.save();
 
         res.status(201).json({
             message: "Technician added successfully",
             technician: technicianUser,
         });
-        return;
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Internal server error"});
-        return;
     }
 }
 
@@ -232,35 +260,89 @@ export async function getAllWorkers(
         }
 
         // Get all greenhouses managed by this manager
-        const greenhouses = await Greenhouse.find({managerId: manager._id}).select("_id");
+        const greenhouses = await Greenhouse.find({managerId: manager._id});
 
         if (greenhouses.length === 0) {
             res.status(200).json({workers: []});
             return;
         }
 
-        const greenhouseIds = greenhouses.map((gh) => gh._id);
+        // Collect all farmer and technician IDs from the greenhouses
+        const farmerIds: mongoose.Types.ObjectId[] = [];
+        const technicianIds: mongoose.Types.ObjectId[] = [];
 
-        // Get all farmers with user details
-        const farmers = await Farmer.find({
-            greenHouseId: {$in: greenhouseIds},
-        })
-            .populate("userId", "name email role") // Select only needed fields
-            .select("-password");
+        greenhouses.forEach((greenhouse) => {
+            if (greenhouse.farmers) {
+                farmerIds.push(...greenhouse.farmers);
+            }
+            if (greenhouse.technicians) {
+                technicianIds.push(...greenhouse.technicians);
+            }
+        });
 
-        // Get all technicians with user details
-        const technicians = await Technician.find({
-            greenHouseId: {$in: greenhouseIds},
-        })
-            .populate("userId", "name email role") // Select only needed fields
-            .select("-password");
+        // Fetch all farmers and technicians
+        const farmers = await Farmer.find({_id: {$in: farmerIds}})
+            .populate("userId", "name email role -_id") // Populate user details
+            .lean();
 
-        // Merge farmers and technicians into one workers array
+        const technicians = await Technician.find({_id: {$in: technicianIds}})
+            .populate("userId", "name email role -_id") // Populate user details
+            .lean();
+
+        // Combine farmers and technicians
         const workers = [...farmers, ...technicians];
 
         res.status(200).json({workers});
     } catch (error) {
         console.error("Error fetching workers:", error);
         res.status(500).json({error: "Internal server error"});
+    }
+}
+
+export async function getAllManagerGrennhouses(
+    req: Request,
+    res: Response
+): Promise<void> {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            res.status(400).json({error: "No access token provided"});
+            return;
+        }
+
+        const payload = jwt.verify(
+            accessToken,
+            process.env.JWT_AT_SECRET!
+        ) as TokenPayLoad;
+        if (!payload) {
+            res.status(400).json({error: "Invalid access token"});
+            return;
+        }
+
+        const user = await User.findOne({email: payload.email});
+        if (!user || user.isDeleted) {
+            res.status(400).json({error: "Unauthorized"});
+            return;
+        }
+
+        if (user.role !== "manager") {
+            res.status(400).json({error: "Unauthorized"});
+            return;
+        }
+
+        const manager = await Manager.findOne({userId: user._id});
+        if (!manager) {
+            res.status(400).json({error: "Manager doesn't exist"});
+            return;
+        }
+
+        const greenhouses = await Greenhouse.find({managerId: manager._id});
+
+        res.status(200).json({greenhouses});
+        return;
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "Internal server error"});
+        return;
     }
 }

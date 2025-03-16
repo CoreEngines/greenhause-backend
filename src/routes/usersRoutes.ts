@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { deleteUser, getAllUsers, getUserById, getUserByToken, requestAccountDeletion, updateUser } from "../controllers/usersController";
 import { isAdmin } from "../middlewares/authMiddleware";
-import { signUpSchema as body, validateRequestBody } from "../validators/authValidator";
 
 const usersRouter = Router();
 
@@ -95,7 +94,7 @@ usersRouter.get("/me", getUserByToken);
  *       500:
  *         description: Internal server error
  */
-usersRouter.put("/me/update", validateRequestBody(body), updateUser);
+usersRouter.put("/me/update", updateUser);
 
 /**
  * @swagger

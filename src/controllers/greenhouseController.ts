@@ -245,13 +245,6 @@ export async function getGreenHouses(req: Request, res: Response) {
             greenhouses = await GreenHouse.find({_id: {$in: technician.greenHouseIds}});
         }
 
-        if (!greenhouses.length) {
-            res.status(400).json({error: "No greenhouses found"});
-            return;
-        }
-
-        console.log(greenhouses);
-
         res.status(200).json({greenhouses});
     } catch (error) {
         console.error(error);

@@ -26,6 +26,7 @@ export function validateRequestBody(schema: z.ZodSchema) {
                     message: "Validation failed",
                     errors,
                 });
+                return;
             }
             res.status(500).json({
                 success: false,

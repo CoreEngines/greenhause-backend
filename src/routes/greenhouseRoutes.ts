@@ -1,4 +1,4 @@
-import { Router } from "express";
+import {Router} from "express";
 import {
     createGreenHouse,
     deleteGreenHouse,
@@ -8,6 +8,27 @@ import {
 
 const ghRouter = Router();
 
+/**
+ * @swagger
+ * /green-houses/create:
+ *   post:
+ *     summary: Create a new green house
+ *     tags: [Greenhouse]
+ *     description: Creates a new green house
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/GreenHouse'
+ *     responses:
+ *       201:
+ *         description: Green house created successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
 ghRouter.post("/create", createGreenHouse);
 
 /**
@@ -48,6 +69,25 @@ ghRouter.post("/update", updateGreenHouse);
  */
 ghRouter.post("/delete", deleteGreenHouse);
 
+/**
+ * @swagger
+ * /green-houses/all:
+ *   get:
+ *     summary: Get all green houses
+ *     tags: [Greenhouse]
+ *     description: Retrieves a list of all green houses
+ *     responses:
+ *       200:
+ *         description: List of green houses retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/GreenHouse'
+ *       500:
+ *         description: Internal server error
+ */
 ghRouter.get("/all", getGreenHouses);
 
 export default ghRouter;

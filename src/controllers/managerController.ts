@@ -51,8 +51,8 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
         if (!farmerUser) {
             // Generate a random password for a new user
             // Use the following hardcoded password for testing purposes (Uncomment if needed)
-            // const randomPassword = "aptget123";
-            const randomPassword = Math.random().toString(36).slice(-8);
+            const randomPassword = "aptget123";
+            // const randomPassword = Math.random().toString(36).slice(-8);
             console.log(randomPassword);
 
             const hashedPassword = await hashPassword(randomPassword);
@@ -160,7 +160,8 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
 
         if (!technicianUser) {
             // Generate a random password for a new user
-            const randomPassword = Math.random().toString(36).slice(-8);
+            // const randomPassword = Math.random().toString(36).slice(-8);
+            const randomPassword = "aptget123";
             console.log(randomPassword);
             const hashedPassword = await hashPassword(randomPassword);
 

@@ -27,6 +27,11 @@ const greenHouseSchema = new mongoose.Schema(
             enum: ["active", "inActive"],
             default: "active",
         },
+        deviceUrl: {
+           type: String,
+           required: false,
+           default: null,
+        },
         farmers: [
             {
                 type: mongoose.Schema.Types.ObjectId,

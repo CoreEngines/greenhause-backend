@@ -6,6 +6,7 @@ import GreenHouse from "../models/greenHouses";
 import Manager from "../models/managers";
 import Farmer from "../models/farmers";
 import Technician from "../models/technicians";
+import {ConnectToDevice} from "../services/mqtt";
 
 // create a green house
 export async function createGreenHouse(
@@ -249,5 +250,40 @@ export async function getGreenHouses(req: Request, res: Response) {
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Internal server error"});
+    }
+}
+
+export async function connectToGreenHouse(req: Request, res: Response): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({error: "No access token provided"});
+        return;
+    }
+
+    const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({error: "Invalid access token"});
+        return;
+    }
+
+    const user = await User.findOne({email: payload.email});
+    if (!user || user.isDeleted) {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const {greenHouseId} = req.body;
+    if (!greenHouseId) {
+        res.status(400).json({error: "Missing fields"});
+        return;
+    }
+
+    // mqtt connection
+    try {
+        await ConnectToDevice(greenHouseId, res);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "Failed to connect to GreenHouse device"});
+        return;
     }
 }

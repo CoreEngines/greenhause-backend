@@ -1,5 +1,6 @@
 import {Router} from "express";
 import {
+    connectToGreenHouse,
     createGreenHouse,
     deleteGreenHouse,
     getGreenHouses,
@@ -89,5 +90,7 @@ ghRouter.post("/delete", deleteGreenHouse);
  *         description: Internal server error
  */
 ghRouter.get("/all", getGreenHouses);
+
+ghRouter.post("/connect", connectToGreenHouse);
 
 export default ghRouter;

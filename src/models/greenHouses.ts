@@ -28,9 +28,9 @@ const greenHouseSchema = new mongoose.Schema(
             default: "active",
         },
         deviceUrl: {
-           type: String,
-           required: false,
-           default: null,
+            type: String,
+            required: false,
+            default: "mqtt://192.168.100.23",
         },
         farmers: [
             {

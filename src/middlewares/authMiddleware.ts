@@ -28,7 +28,6 @@ export async function isAuthenticated(req: Request, res: Response, next: NextFun
                 }
 
                 const newAccessToken = generateAccessToken({ userId: payload.userId, email: payload.email });
-                console.log('New Access Token:', newAccessToken);
 
                 res.cookie("accessToken", newAccessToken, {
                     httpOnly: true,
@@ -61,7 +60,6 @@ export async function isAdmin(req: Request, res: Response, next: NextFunction) {
 
     try {
         const decode = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
-        console.log(decode);
         if (!decode) {
             res.status(401).json({ error: "Unauthorized" });
         }
@@ -89,7 +87,6 @@ export async function isDeleted(req: Request, res: Response, next: NextFunction)
 
     try {
         const decode = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
-        console.log(decode);
         if (!decode) {
             res.status(401).json({ error: "Unauthorized" });
             return;

@@ -286,4 +286,6 @@ export async function connectToGreenHouse(req: Request, res: Response): Promise<
         res.status(500).json({error: "Failed to connect to GreenHouse device"});
         return;
     }
+    res.status(200).json({message: "Connected to GreenHouse device"});
+    return;
 }

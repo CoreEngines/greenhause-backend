@@ -1,25 +1,35 @@
-import express, { Request, Response } from "express";
+import express, {Request, Response} from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import { error } from "console";
+import {error} from "console";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/authRoutes";
 import PassportConfig from "./config/passportConfig";
 import unAuthRouter from "./routes/unAuthRoutes";
-import { logger } from "./middlewares/logger";
-import { errorLogger } from "./middlewares/errorLogger";
-import { connectDB } from "./config/dbConnection";
-import { isAuthenticated, isDeleted } from "./middlewares/authMiddleware";
+import {logger} from "./middlewares/logger";
+import {errorLogger} from "./middlewares/errorLogger";
+import {connectDB} from "./config/dbConnection";
+import {isAuthenticated, isDeleted} from "./middlewares/authMiddleware";
 import usersRouter from "./routes/usersRoutes";
-import { setupSwagger } from "./config/swagger";
+import {setupSwagger} from "./config/swagger";
 import ghRouter from "./routes/greenhouseRoutes";
 import managerRoutes from "./routes/managerRoutes";
+import * as http from "node:http";
+import {Server} from "socket.io";
 
 dotenv.config();
 
 const app = express();
+const wss = http.createServer(app);
 const PORT = process.env.PORT || 3030;
+
+export const ws = new Server(wss, {
+    cors: {
+        origin: "http://localhost:3000",
+
+    }
+})
 
 connectDB();
 
@@ -46,22 +56,34 @@ try {
 
 setupSwagger(app);
 
-app.use("/auth",  unAuthRouter);
-app.use("/auth",  isAuthenticated, isDeleted, authRouter);
-app.use("/users",  isAuthenticated, isDeleted, usersRouter);
-app.use("/green-houses",  isAuthenticated, isDeleted, ghRouter);
-app.use("/manager", isAuthenticated, isDeleted ,managerRoutes);
+app.use("/auth", unAuthRouter);
+app.use("/auth", isAuthenticated, isDeleted, authRouter);
+app.use("/users", isAuthenticated, isDeleted, usersRouter);
+app.use("/green-houses", isAuthenticated, isDeleted, ghRouter);
+app.use("/manager", isAuthenticated, isDeleted, managerRoutes);
 
 app.get("/", (req: Request, res: Response) => {
-    res.status(200).json({ message: "Hello, World!" });
+    res.status(200).json({message: "Hello, World!"});
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`[APP] Server is running on http://localhost:${PORT}`);
+});
+
+wss.listen(3031, () => {
+    console.log("[WSS] Server is running on port 3031");
+});
+
+ws.on("connection", (socket) => {
+    console.log("[WSS] New client connected:", socket.id);
+
+    socket.on("disconnect", () => {
+        console.log("[WSS] Client disconnected:", socket.id);
+    });
 });
 
 mongoose.connection.on("open", () => {
-    console.log("[INFO] Connected to MonogoDB");
+    console.log("[DB] Connected to MonogoDB");
 });
 
 mongoose.connection.on("error", () => {
@@ -69,5 +91,5 @@ mongoose.connection.on("error", () => {
 });
 
 mongoose.connection.on("disconnected", () => {
-    console.log("[INFO]: Disconnected to MonogoDB");
+    console.log("[DB]: Disconnected to MonogoDB");
 });

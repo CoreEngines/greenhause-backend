@@ -1,6 +1,7 @@
 import {Response} from "express";
 import Greenhouse from "../models/greenHouses";
 import mqtt from "mqtt";
+import {ws} from "../app";
 
 const connectedDevices: Record<string, mqtt.MqttClient> = {};
 
@@ -43,9 +44,9 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
             console.log(`[MQTT] Data received from ${topic}:`, message.toString());
 
             const sensorData = message.toString();
-            console.log(sensorData);
 
             // Establish a websocket connection
+            ws.emit("sensorData", {data: sensorData});
         });
 
         mqttClient.on("error", (err) => console.error("[MQTT] Error:", err));

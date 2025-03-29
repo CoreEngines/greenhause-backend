@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {boolean} from "zod";
 
 const greenHouseSchema = new mongoose.Schema(
     {
@@ -27,10 +28,15 @@ const greenHouseSchema = new mongoose.Schema(
             enum: ["active", "inActive"],
             default: "active",
         },
+        connection: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
         deviceUrl: {
             type: String,
             required: false,
-            default: "mqtt://192.168.100.23",
+            default: "mqtt://192.168.188.211",
         },
         farmers: [
             {
@@ -60,7 +66,6 @@ const greenHouseSchema = new mongoose.Schema(
     },
     {timestamps: true}
 );
-
 
 const softDeletionPeriod = 60 * 5; // 5 minutes (for testing)
 greenHouseSchema.index({deletedAt: 1}, {expireAfterSeconds: softDeletionPeriod});

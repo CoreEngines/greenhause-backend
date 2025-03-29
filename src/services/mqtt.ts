@@ -60,3 +60,39 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
         return
     }
 }
+
+export async function disconnectFromDevice(greenHouseId: string, res: Response) {
+    try {
+        const greenHouse = await Greenhouse.findOne({_id: greenHouseId});
+        if (!greenHouse) {
+            res.status(400).json({error: "Green house doesn't exist"});
+            console.log("[MQTT] Green house doesn't exist");
+            return;
+        }
+
+        const {deviceUrl} = greenHouse;
+        if (!deviceUrl) {
+            res.status(400).json({error: "Green house doesn't have device url"});
+            return;
+        }
+
+        if (!connectedDevices[deviceUrl]) {
+            console.log("[MQTT] Device is not connected");
+            res.status(400).json({error: "Device is not connected"});
+            return;
+        }
+
+        // Get the MQTT client and disconnect
+        const mqttClient = connectedDevices[deviceUrl];
+
+        mqttClient.end(true, () => {
+            console.log(`[MQTT] Disconnected from ${deviceUrl}`);
+            delete connectedDevices[deviceUrl];
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: "Internal Server Error"});
+        return;
+    }
+}

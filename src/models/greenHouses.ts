@@ -28,10 +28,10 @@ const greenHouseSchema = new mongoose.Schema(
             enum: ["active", "inActive"],
             default: "active",
         },
-        connection: {
-            type: Boolean,
+        deviceIP: {
+            type: String,
             required: false,
-            default: false,
+            default: null,
         },
         deviceUrl: {
             type: String,

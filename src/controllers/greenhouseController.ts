@@ -7,6 +7,7 @@ import Manager from "../models/managers";
 import Farmer from "../models/farmers";
 import Technician from "../models/technicians";
 import {ConnectToDevice, disconnectFromDevice} from "../services/mqtt";
+import mongoose from "mongoose";
 
 // create a green house
 export async function createGreenHouse(
@@ -247,6 +248,68 @@ export async function getGreenHouses(req: Request, res: Response) {
         }
 
         res.status(200).json({greenhouses});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "Internal server error"});
+    }
+}
+
+export async function getGreenHouseWorkers(req: Request, res: Response): Promise<void> {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            res.status(400).json({error: "No access token provided"});
+            return;
+        }
+
+        const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+        if (!payload) {
+            res.status(400).json({error: "Invalid access token"});
+            return;
+        }
+
+        const user = await User.findOne({email: payload.email});
+        if (!user || user.isDeleted) {
+            res.status(400).json({error: "Unauthorized"});
+            return;
+        }
+        const {greenHouseId} = req.body;
+        if (!greenHouseId) {
+            res.status(400).json({error: "greenhouseId is required"});
+            return;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(greenHouseId)) {
+            res.status(400).json({error: "Invalid greenhouse ID"});
+            return;
+        }
+
+        const greenhouse = await GreenHouse.findById(greenHouseId)
+            .populate({
+                path: "farmers",
+                select: "-greenHouseIds",
+                populate: {
+                    path: "userId",
+                    select: "name email role"
+                }
+            })
+            .populate({
+                path: "technicians",
+                select: "-greenHouseIds",
+                populate: {
+                    path: "userId",
+                    select: "name email role"
+                }
+            });
+        if (!greenhouse) {
+            res.status(404).json({error: "Greenhouse not found"});
+            return;
+        }
+
+        const farmers = greenhouse.farmers;
+        const technicians = greenhouse.technicians;
+
+        res.status(200).json({farmers, technicians});
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Internal server error"});

@@ -3,9 +3,10 @@ import {
     connectToGreenHouse,
     createGreenHouse,
     deleteGreenHouse, disconnectFromGreenHouse,
-    getGreenHouses,
+    getGreenHouses, getGreenHouseWorkers,
     updateGreenHouse
 } from "../controllers/greenhouseController";
+import {getAllWorkers} from "../controllers/managerController";
 
 const ghRouter = Router();
 
@@ -223,4 +224,62 @@ ghRouter.post("/connect", connectToGreenHouse);
  *                   example: "Failed to disconnect from GreenHouse device"
  */
 ghRouter.post("/disconnect", disconnectFromGreenHouse);
+
+/**
+ * @swagger
+ * /green-houses/workers:
+ *   post:
+ *     summary: Get Greenhouse Workers
+ *     description: Fetches the list of farmers and technicians associated with a greenhouse.
+ *     tags:
+ *       - Greenhouse
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the greenhouse.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved greenhouse workers.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 farmers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       role:
+ *                         type: string
+ *                 technicians:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       role:
+ *                         type: string
+ *       400:
+ *         description: Invalid request parameters or unauthorized access.
+ *       404:
+ *         description: Greenhouse not found.
+ *       500:
+ *         description: Internal server error.
+ */
+ghRouter.post("/workers", getGreenHouseWorkers);
+
 export default ghRouter;

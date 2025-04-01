@@ -7,6 +7,12 @@ const farmerSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    status: {
+        type: String,
+        required: false,
+        enum: ["active", "pending"],
+        default: "pending",
+    },
     greenHouseIds: [
         {
             type: mongoose.Schema.Types.ObjectId,

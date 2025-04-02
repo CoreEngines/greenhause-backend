@@ -37,6 +37,28 @@ const greenHouseSchema = new mongoose.Schema(
             required: false,
             default: "mqtt://192.168.188.211",
         },
+        thresholds: {
+            temperature: {
+                type: Number,
+                required: false,
+                default: null,
+            },
+            humidity: {
+                type: Number,
+                required: false,
+                default: null,
+            },
+            soilMoisture: {
+                type: Number,
+                required: false,
+                default: null,
+            },
+            ph: {
+                type: Number,
+                required: false,
+                default: null,
+            },
+        },
         farmers: [
             {
                 type: mongoose.Schema.Types.ObjectId,

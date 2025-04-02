@@ -4,7 +4,8 @@ import {
     createGreenHouse,
     deleteGreenHouse, disconnectFromGreenHouse,
     getGreenHouses, getGreenHouseWorkers,
-    updateGreenHouse
+    updateGreenHouse,
+    updateThresholds
 } from "../controllers/greenhouseController";
 import {getAllWorkers} from "../controllers/managerController";
 
@@ -32,6 +33,59 @@ const ghRouter = Router();
  *         description: Internal server error
  */
 ghRouter.post("/create", createGreenHouse);
+
+/**
+ * 
+ * @swagger
+ * /green-houses/set-thresholds:
+ *   post:
+ *     summary: Set thresholds for a green house
+ *     tags: [Greenhouse]
+ *     description: Sets the thresholds for a green house
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the green house
+ *               temperature_min:
+ *                 type: number
+ *                 description: Minimum temperature threshold
+ *               temperature_max:
+ *                 type: number
+ *                 description: Maximum temperature threshold
+ *               humidity_min:
+ *                 type: number
+ *                 description: Minimum humidity threshold
+ *               humidity_max:
+ *                 type: number
+ *                 description: Maximum humidity threshold
+ *               soilMoisture_min:
+ *                 type: number
+ *                 description: Minimum soil moisture threshold
+ *               soilMoisture_max:
+ *                 type: number
+ *                 description: Maximum soil moisture threshold
+ *               ph_min:
+ *                 type: number
+ *                 description: Minimum pH level threshold
+ *               ph_max:
+ *                 type: number
+ *                 description: Maximum pH level threshold
+ *     responses:
+ *       200:
+ *         description: Thresholds set successfully
+ *       400:
+ *         description: Bad request - Missing fields
+ *       500:
+ *         description: Internal server error
+ */
+ghRouter.post("/set-thresholds", updateThresholds);
+
 
 /**
  * @swagger

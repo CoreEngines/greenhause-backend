@@ -1,3 +1,4 @@
+import { min } from "date-fns";
 import mongoose from "mongoose";
 
 const greenHouseSchema = new mongoose.Schema(
@@ -39,24 +40,44 @@ const greenHouseSchema = new mongoose.Schema(
         },
         thresholds: {
             temperature: {
-                type: Number,
-                required: false,
-                default: null,
+                min: {
+                    type: Number,
+                    required: false,
+                },
+                max: {
+                    type: Number,
+                    required: false,
+                },
             },
             humidity: {
-                type: Number,
-                required: false,
-                default: null,
+                min: {
+                    type: Number,
+                    required: false,
+                },
+                max: {
+                    type: Number,
+                    required: false,
+                },
             },
             soilMoisture: {
-                type: Number,
-                required: false,
-                default: null,
+                min: {
+                    type: Number,
+                    required: false,
+                },
+                max: {
+                    type: Number,
+                    required: false,
+                },
             },
             ph: {
-                type: Number,
-                required: false,
-                default: null,
+                min: {
+                    type: Number,
+                    required: false,
+                },
+                max: {
+                    type: Number,
+                    required: false,
+                },
             },
         },
         farmers: [

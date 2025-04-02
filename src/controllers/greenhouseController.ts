@@ -65,6 +65,24 @@ export async function createGreenHouse(
         status: "active",
         farmers: [],
         technicians: [],
+        thresholds: {
+            temperature: {
+                min: 0,
+                max: 0,
+            },
+            humidity:{
+                min: 0,
+                max: 0,
+            },
+            soilMoisture:{
+                min: 0,
+                max: 0,
+            },
+            ph: {
+                min: 0,
+                max: 0,
+            },
+        },
         staffCount: 0,
         isDeleted: false,
         deletedAt: null,
@@ -77,6 +95,79 @@ export async function createGreenHouse(
 
     res.status(200).json(greenHouse);
     return;
+}
+
+export async function updateThresholds(req: Request, res: Response) {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({error: "No access token provided"});
+        return;
+    }
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({error: "Invalid access token"});
+        return;
+    }
+
+    const {greenHouseId, temperature_min , temperature_max , humidity_min, humidity_max , soilMoisture_min , soilMoisture_max, ph_min, ph_max} = req.body;
+    if (!greenHouseId || !temperature_min || !temperature_max || !humidity_min || !humidity_max || !soilMoisture_min || !soilMoisture_max || !ph_min || !ph_max) {
+        res.status(400).json({error: "Missing fields"});
+        return;
+    }
+
+
+    const user = await User.findOne({email: payload.email});
+    if (!user) {
+        res.status(400).json({error: "User doesn't exist"});
+        return;
+    }
+
+    if (user.role !== "manager") {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const manager = await Manager.findOne({userId: user._id});
+    if (!manager) {
+        res.status(400).json({error: "Manager doesn't exist"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findOne({_id: greenHouseId});
+    if (!greenHouse) {
+        res.status(400).json({error: "Green house doesn't exist"});
+        return;
+    }
+
+    if (greenHouse.managerId.toString() !== manager._id.toString()) {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    if (!greenHouse.thresholds) {
+        res.status(400).json({error: "Thresholds are not defined for this greenhouse"});
+        return;
+    }
+
+    if (!greenHouse.thresholds.temperature || !greenHouse.thresholds.humidity || !greenHouse.thresholds.soilMoisture || !greenHouse.thresholds.ph) {
+        res.status(400).json({error: "Thresholds are not defined for this greenhouse"});
+        return;
+    }
+    greenHouse.thresholds.temperature.min = temperature_min;
+    greenHouse.thresholds.temperature.max = temperature_max;
+    greenHouse.thresholds.humidity.min = humidity_min;
+    greenHouse.thresholds.humidity.max = humidity_max;
+    greenHouse.thresholds.soilMoisture.min = soilMoisture_min;
+    greenHouse.thresholds.soilMoisture.max = soilMoisture_max;
+    greenHouse.thresholds.ph.min = ph_min;
+    greenHouse.thresholds.ph.max = ph_max;
+
+    await greenHouse.save();
+
+    res.status(200).json(greenHouse);
 }
 
 export async function deleteGreenHouse(req: Request, res: Response) {

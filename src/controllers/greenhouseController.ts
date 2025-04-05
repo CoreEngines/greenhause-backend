@@ -70,11 +70,11 @@ export async function createGreenHouse(
                 min: 0,
                 max: 0,
             },
-            humidity:{
+            humidity: {
                 min: 0,
                 max: 0,
             },
-            soilMoisture:{
+            soilMoisture: {
                 min: 0,
                 max: 0,
             },
@@ -112,7 +112,17 @@ export async function updateThresholds(req: Request, res: Response) {
         return;
     }
 
-    const {greenHouseId, temperature_min , temperature_max , humidity_min, humidity_max , soilMoisture_min , soilMoisture_max, ph_min, ph_max} = req.body;
+    const {
+        greenHouseId,
+        temperature_min,
+        temperature_max,
+        humidity_min,
+        humidity_max,
+        soilMoisture_min,
+        soilMoisture_max,
+        ph_min,
+        ph_max
+    } = req.body;
     if (!greenHouseId || !temperature_min || !temperature_max || !humidity_min || !humidity_max || !soilMoisture_min || !soilMoisture_max || !ph_min || !ph_max) {
         res.status(400).json({error: "Missing fields"});
         return;
@@ -156,6 +166,7 @@ export async function updateThresholds(req: Request, res: Response) {
         res.status(400).json({error: "Thresholds are not defined for this greenhouse"});
         return;
     }
+
     greenHouse.thresholds.temperature.min = temperature_min;
     greenHouse.thresholds.temperature.max = temperature_max;
     greenHouse.thresholds.humidity.min = humidity_min;

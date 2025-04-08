@@ -8,6 +8,7 @@ import Farmer from "../models/farmers";
 import Technician from "../models/technicians";
 import {ConnectToDevice, disconnectFromDevice} from "../services/mqtt";
 import mongoose from "mongoose";
+import GreenHouseStats from "../models/greenHouseStats";
 
 // create a green house
 export async function createGreenHouse(
@@ -489,4 +490,87 @@ export async function disconnectFromGreenHouse(req: Request, res: Response): Pro
     }
     res.status(200).json({message: "Disconnected from GreenHouse device"});
     return;
+}
+
+export async function seedFakeStats(req: Request, res: Response): Promise<void> {
+    const fakeStats = [];
+    const greenhouseId = "67e75b8fff9010bc38bf1cbf";
+
+    const startDate = new Date("2025-01-01");
+    const endDate = new Date("2025-12-31");
+
+    for (
+        let date = new Date(startDate);
+        date <= endDate;
+        date.setDate(date.getDate() + 1)
+    ) {
+        const timestamp = new Date(date); // copy to avoid mutation
+
+        fakeStats.push({
+            greenHouseId: greenhouseId,
+            temperature: Math.random() * (35 - 15) + 15,
+            humidity: Math.random() * (100 - 30) + 30,
+            soilMoisture: Math.random() * (100 - 10) + 10,
+            ph: Math.random() * (8 - 5.5) + 5.5,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+        });
+    }
+
+    await GreenHouseStats.insertMany(fakeStats);
+    console.log(`✅ Inserted ${fakeStats.length} fake records for each day of 2025`);
+    res.status(200).json({message: "Fake daily stats for 2025 inserted!"});
+}
+
+export async function getGreenHouseStats(req: Request, res: Response): Promise<void> {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            res.status(400).json({error: "No access token provided"});
+            return;
+        }
+
+        const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+        if (!payload) {
+            res.status(400).json({error: "Invalid access token"});
+            return;
+        }
+
+        const user = await User.findOne({email: payload.email});
+        if (!user || user.isDeleted) {
+            res.status(400).json({error: "Unauthorized"});
+            return;
+        }
+
+        const {greenHouseId} = req.body;
+        if (!greenHouseId) {
+            res.status(400).json({error: "greenHouseId is required"});
+            return;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(greenHouseId)) {
+            res.status(400).json({error: "Invalid greenhouse ID"});
+            return;
+        }
+
+        const stats = await GreenHouseStats.find({greenHouseId}).sort({createdAt: -1});
+
+        if (!stats.length) {
+            res.status(404).json({error: "No stats found for this greenhouse"});
+            return;
+        }
+
+        const formattedStats = stats.map(stat => ({
+            date: stat.createdAt.toISOString().split("T")[0], // YYYY-MM-DD
+            ph: stat.ph,
+            temperature: stat.temperature,
+            humidity: stat.humidity,
+            soilMoisture: stat.soilMoisture
+        }));
+
+        res.status(200).json(formattedStats);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "Internal server error"});
+    }
 }

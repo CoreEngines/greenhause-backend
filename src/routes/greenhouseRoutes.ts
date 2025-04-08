@@ -3,11 +3,10 @@ import {
     connectToGreenHouse,
     createGreenHouse,
     deleteGreenHouse, disconnectFromGreenHouse,
-    getGreenHouses, getGreenHouseWorkers,
+    getGreenHouses, getGreenHouseStats, getGreenHouseWorkers, seedFakeStats,
     updateGreenHouse,
     updateThresholds
 } from "../controllers/greenhouseController";
-import {getAllWorkers} from "../controllers/managerController";
 
 const ghRouter = Router();
 
@@ -35,7 +34,7 @@ const ghRouter = Router();
 ghRouter.post("/create", createGreenHouse);
 
 /**
- * 
+ *
  * @swagger
  * /green-houses/set-thresholds:
  *   post:
@@ -335,5 +334,9 @@ ghRouter.post("/disconnect", disconnectFromGreenHouse);
  *         description: Internal server error.
  */
 ghRouter.post("/workers", getGreenHouseWorkers);
+
+ghRouter.post("/seed", seedFakeStats);
+
+ghRouter.post("/get-stats", getGreenHouseStats);
 
 export default ghRouter;

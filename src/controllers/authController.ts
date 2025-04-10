@@ -496,3 +496,42 @@ export async function checkToken(req: Request, res: Response) {
 
     res.status(200).json({ token: "valid" });
 }
+
+export async function setUpProfile(req: Request, res: Response){
+    const { fullname, password } = req.body;
+    const accessToken: string = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({ error: "No access token provided" });
+    }
+
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({ error: "Invalid access token" });
+    }
+
+    const user = await User.findOne({ email: payload.email });
+    if (!user) {
+        res.status(400).json({ error: "User doesn't exist" });
+        return;
+    }
+
+    if (user.isDeleted) {
+        res.status(400).json({ error: "Unauthorized" });
+        return;
+    }
+
+    if (fullname) user.name = fullname;
+    if (password) user.password = await hashPassword(password);
+    user.isVerified = true;
+
+    try {
+        await user.save();
+        res.status(200).json({ message: "Profile updated successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error updating profile" });
+    }
+}

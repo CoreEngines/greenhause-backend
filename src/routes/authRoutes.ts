@@ -4,6 +4,7 @@ import {
   sendVerificationEmail,
   verifyEmail,
   checkToken,
+  setUpProfile,
 } from "../controllers/authController";
 
 const authRouter = Router();
@@ -54,6 +55,42 @@ authRouter.get("/logout", logout);
  *         description: Internal server error
  */
 authRouter.get("/request-email-verification", sendVerificationEmail);
+
+/**
+ * @swagger
+ * /auth/set-profile:
+ *   post:
+ *     summary: Update user profile
+ *     tags: [Users]
+ *     description: Updates the user's profile information.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Profile updated successfully"
+ *       400:
+ *         description: Invalid input data or no access token provided
+ *       500:
+ *         description: Internal server error
+ */
+authRouter.post("/set-profile", setUpProfile);
 
 /**
  * @swagger

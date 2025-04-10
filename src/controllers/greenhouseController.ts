@@ -574,3 +574,86 @@ export async function getGreenHouseStats(req: Request, res: Response): Promise<v
         res.status(500).json({error: "Internal server error"});
     }
 }
+
+export async function getAvgDailyStats(req: Request, res: Response): Promise<void> {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            res.status(400).json({error: "No access token provided"});
+            return;
+        }
+
+        const payload = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+        if (!payload) {
+            res.status(400).json({error: "Invalid access token"});
+            return;
+        }
+
+        const user = await User.findOne({email: payload.email});
+        if (!user || user.isDeleted) {
+            res.status(400).json({error: "Unauthorized"});
+            return;
+        }
+
+        const {greenHouseId} = req.body;
+        if (!greenHouseId) {
+            res.status(400).json({error: "greenHouseId is required"});
+            return;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(greenHouseId)) {
+            res.status(400).json({error: "Invalid greenhouse ID"});
+            return;
+        }
+
+        const greenhouse = await mongoose.model("GreenHouse").findById(greenHouseId);
+        if (!greenhouse || greenhouse.isDeleted) {
+            res.status(404).json({success: false, message: "Greenhouse not found"});
+            return;
+        }
+
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+
+        const todayAvg = await GreenHouseStats.aggregate([
+            {
+                $match: {
+                    greenHouseId: new mongoose.Types.ObjectId(greenHouseId),
+                    createdAt: {
+                        $gte: startOfToday,
+                        $lte: endOfToday
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avgTemperature: {$avg: "$temperature"},
+                    avgHumidity: {$avg: "$humidity"},
+                    avgSoilMoisture: {$avg: "$soilMoisture"},
+                    avgPh: {$avg: "$ph"}
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    avgTemperature: 1,
+                    avgHumidity: 1,
+                    avgSoilMoisture: 1,
+                    avgPh: 1,
+                    date: {
+                        $dateToString: {format: "%Y-%m-%d", date: new Date()}
+                    }
+                }
+            }
+        ]);
+
+        res.status(200).json({success: true, data: todayAvg[0] || {}});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({error: "Internal server error"});
+    }
+}

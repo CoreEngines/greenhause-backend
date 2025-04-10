@@ -2,8 +2,13 @@ import {Router} from "express";
 import {
     connectToGreenHouse,
     createGreenHouse,
-    deleteGreenHouse, disconnectFromGreenHouse,
-    getGreenHouses, getGreenHouseStats, getGreenHouseWorkers, seedFakeStats,
+    deleteGreenHouse,
+    disconnectFromGreenHouse,
+    getAvgDailyStats,
+    getGreenHouses,
+    getGreenHouseStats,
+    getGreenHouseWorkers,
+    seedFakeStats,
     updateGreenHouse,
     updateThresholds
 } from "../controllers/greenhouseController";
@@ -338,5 +343,7 @@ ghRouter.post("/workers", getGreenHouseWorkers);
 ghRouter.post("/seed", seedFakeStats);
 
 ghRouter.post("/get-stats", getGreenHouseStats);
+
+ghRouter.post("/avg", getAvgDailyStats)
 
 export default ghRouter;

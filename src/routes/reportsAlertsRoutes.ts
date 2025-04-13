@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import {reportAlert} from "../controllers/reportAlert";
+import {reportAlertController} from "../controllers/reportAlertController";
 
 const reportsAlertsRouter = Router();
 
@@ -43,6 +43,6 @@ const reportsAlertsRouter = Router();
  *       500:
  *         description: Internal server error
  */
-reportsAlertsRouter.post("/alert-issue", reportAlert);
+reportsAlertsRouter.post("/alert-issue", reportAlertController);
 
 export default reportsAlertsRouter;

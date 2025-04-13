@@ -182,7 +182,10 @@ export async function updateThresholds(req: Request, res: Response) {
     res.status(200).json(greenHouse);
 }
 
-export async function deleteGreenHouse(req: Request, res: Response) {
+export async function deleteGreenHouse(
+    req: Request,
+    res: Response
+): Promise<void> {
     const accessToken = req.cookies.accessToken;
     if (!accessToken) {
         res.status(400).json({error: "No access token provided"});
@@ -210,6 +213,11 @@ export async function deleteGreenHouse(req: Request, res: Response) {
         return;
     }
 
+    if (user.isDeleted) {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
     if (user.role !== "manager") {
         res.status(400).json({error: "Unauthorized"});
         return;
@@ -223,7 +231,7 @@ export async function deleteGreenHouse(req: Request, res: Response) {
 
     const greenHouse = await GreenHouse.findOne({_id: id});
     if (!greenHouse) {
-        res.status(400).json({error: "Green house doesn't exist"});
+        res.status(404).json({error: "Greenhouse not found"});
         return;
     }
 
@@ -232,13 +240,38 @@ export async function deleteGreenHouse(req: Request, res: Response) {
         return;
     }
 
-    greenHouse.deletedAt = new Date(Date.now());
-    greenHouse.isDeleted = true;
-    await greenHouse.save();
+    try {
+        // Soft delete the greenhouse
+        greenHouse.isDeleted = true;
+        greenHouse.deletedAt = new Date();
+        await greenHouse.save();
 
-    res.status(200).json(greenHouse);
-    return;
+        // Remove greenhouse from manager's list
+        manager.greenHouseIds = manager.greenHouseIds.filter(
+            (ghId) => ghId.toString() !== id
+        );
+        await manager.save();
 
+        // Remove greenhouse from all associated farmers
+        await Farmer.updateMany(
+            { greenHouseIds: id },
+            { $pull: { greenHouseIds: id } }
+        );
+
+        // Remove greenhouse from all associated technicians
+        await Technician.updateMany(
+            { greenHouseIds: id },
+            { $pull: { greenHouseIds: id } }
+        );
+
+        // Delete all associated greenhouse stats
+        await GreenHouseStats.deleteMany({ greenHouseId: id });
+
+        res.status(200).json({ message: "Greenhouse deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting greenhouse:", error);
+        res.status(500).json({ error: "Failed to delete greenhouse" });
+    }
 }
 
 export async function updateGreenHouse(req: Request, res: Response) {

@@ -35,7 +35,7 @@ const greenHouseSchema = new mongoose.Schema(
         deviceUrl: {
             type: String,
             required: false,
-            default: "mqtt://192.168.188.211",
+            default: null,
         },
         thresholds: {
             temperature: {

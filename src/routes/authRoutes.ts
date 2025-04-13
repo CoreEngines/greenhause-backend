@@ -1,10 +1,10 @@
-import { Router } from "express";
+import {Router} from "express";
 import {
-  logout,
-  sendVerificationEmail,
-  verifyEmail,
-  checkToken,
-  setUpProfile,
+    logout,
+    sendVerificationEmail,
+    verifyEmail,
+    checkToken,
+    setUpProfile, checkStatus,
 } from "../controllers/authController";
 
 const authRouter = Router();
@@ -91,6 +91,37 @@ authRouter.get("/request-email-verification", sendVerificationEmail);
  *         description: Internal server error
  */
 authRouter.post("/set-profile", setUpProfile);
+
+/**
+ * @swagger
+ * /auth/check-status:
+ *   post:
+ *     summary: Check user status
+ *     tags: [Users]
+ *     description: Checks the status of the logged-in user (e.g., farmer or technician).
+ *     responses:
+ *       200:
+ *         description: User status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   description: The status of the user (e.g., active or pending).
+ *                 message:
+ *                   type: string
+ *                   description: A message describing the user's status.
+ *             example:
+ *               status: "active"
+ *               message: "Farmer status is Active"
+ *       400:
+ *         description: No access token provided or user doesn't exist
+ *       500:
+ *         description: Internal server error
+ */
+authRouter.post("/check-status", checkStatus);
 
 /**
  * @swagger

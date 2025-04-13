@@ -690,3 +690,114 @@ export async function getAvgDailyStats(req: Request, res: Response): Promise<voi
         res.status(500).json({error: "Internal server error"});
     }
 }
+
+export async function removeWorkerFromGreenhouse(
+    req: Request,
+    res: Response
+): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({error: "No access token provided"});
+        return;
+    }
+
+    const { greenhouseId, workerId, workerType } = req.body;
+    if (!greenhouseId || !workerId || !workerType) {
+        res.status(400).json({error: "Missing required fields"});
+        return;
+    }
+
+    if (workerType !== "farmer" && workerType !== "technician") {
+        res.status(400).json({error: "Invalid worker type"});
+        return;
+    }
+
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({error: "Invalid access token"});
+        return;
+    }
+
+    const user = await User.findOne({email: payload.email});
+    if (!user) {
+        res.status(400).json({error: "User doesn't exist"});
+        return;
+    }
+
+    if (user.isDeleted) {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    if (user.role !== "manager") {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const manager = await Manager.findOne({userId: user._id});
+    if (!manager) {
+        res.status(400).json({error: "Manager doesn't exist"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findById(greenhouseId);
+    if (!greenHouse) {
+        res.status(404).json({error: "Greenhouse not found"});
+        return;
+    }
+
+    if (greenHouse.managerId.toString() !== manager._id.toString()) {
+        res.status(403).json({error: "Unauthorized to modify this greenhouse"});
+        return;
+    }
+
+    try {
+        if (workerType === "farmer") {
+            const farmer = await Farmer.findById(workerId);
+            if (!farmer) {
+                res.status(404).json({error: "Farmer not found"});
+                return;
+            }
+
+            // Remove greenhouse from farmer's list
+            farmer.greenHouseIds = farmer.greenHouseIds.filter(
+                id => id.toString() !== greenhouseId
+            );
+            await farmer.save();
+
+            // Remove farmer from greenhouse's list
+            greenHouse.farmers = greenHouse.farmers.filter(
+                id => id.toString() !== workerId
+            );
+        } else {
+            const technician = await Technician.findById(workerId);
+            if (!technician) {
+                res.status(404).json({error: "Technician not found"});
+                return;
+            }
+
+            // Remove greenhouse from technician's list
+            technician.greenHouseIds = technician.greenHouseIds.filter(
+                id => id.toString() !== greenhouseId
+            );
+            await technician.save();
+
+            // Remove technician from greenhouse's list
+            greenHouse.technicians = greenHouse.technicians.filter(
+                id => id.toString() !== workerId
+            );
+        }
+
+        // Update staff count
+        greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
+        await greenHouse.save();
+
+        res.status(200).json({ message: "Worker removed successfully" });
+    } catch (error) {
+        console.error("Error removing worker:", error);
+        res.status(500).json({ error: "Failed to remove worker" });
+    }
+}

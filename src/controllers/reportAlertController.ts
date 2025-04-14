@@ -68,3 +68,37 @@ export async function reportAlertController(
         return;
     }
 }
+
+export async function getAllAlerts(req: Request, res: Response): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({error: "No access token provided"});
+        return;
+    }
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({error: "Invalid access token"});
+        return;
+    }
+
+    const user = await User.findOne({email: payload.email});
+    if (!user) {
+        res.status(400).json({error: "User doesn't exist"});
+        return;
+    }
+
+    const {greenHouseId} = req.body;
+    if (!greenHouseId) {
+        res.status(400).json({message: "Green house ID is required"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findOne({_id: greenHouseId});
+    if (!greenHouse) {
+        res.status(400).json({error: "Green house doesn't exist"});
+        return;
+    }
+}

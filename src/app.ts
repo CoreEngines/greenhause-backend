@@ -28,7 +28,6 @@ const PORT = process.env.PORT || 3030;
 export const ws = new Server(wss, {
     cors: {
         origin: "http://localhost:3000",
-
     }
 })
 
@@ -81,6 +80,11 @@ ws.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         console.log("[WSS] Client disconnected:", socket.id);
+    });
+
+    socket.on("join-greenhouse", (greenHouseId) => {
+        socket.join(greenHouseId);
+        console.log(`User ${socket.id} joined greenhouse ${greenHouseId}`);
     });
 });
 

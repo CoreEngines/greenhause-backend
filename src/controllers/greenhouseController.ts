@@ -254,27 +254,27 @@ export async function deleteGreenHouse(
 
         // Remove greenhouse from all associated farmers
         await Farmer.updateMany(
-            { greenHouseIds: id },
-            { $pull: { greenHouseIds: id } }
+            {greenHouseIds: id},
+            {$pull: {greenHouseIds: id}}
         );
 
         // Remove greenhouse from all associated technicians
         await Technician.updateMany(
-            { greenHouseIds: id },
-            { $pull: { greenHouseIds: id } }
+            {greenHouseIds: id},
+            {$pull: {greenHouseIds: id}}
         );
 
         // Delete all associated greenhouse stats
-        await GreenHouseStats.deleteMany({ greenHouseId: id });
+        await GreenHouseStats.deleteMany({greenHouseId: id});
 
-        res.status(200).json({ message: "Greenhouse deleted successfully" });
+        res.status(200).json({message: "Greenhouse deleted successfully"});
     } catch (error) {
         console.error("Error deleting greenhouse:", error);
-        res.status(500).json({ error: "Failed to delete greenhouse" });
+        res.status(500).json({error: "Failed to delete greenhouse"});
     }
 }
 
-export async function updateGreenHouse(req: Request, res: Response) {
+export async function updateGreenHouse(req: Request, res: Response): Promise<void> {
     const accessToken = req.cookies.accessToken;
     if (!accessToken) {
         res.status(400).json({error: "No access token provided"});
@@ -331,6 +331,54 @@ export async function updateGreenHouse(req: Request, res: Response) {
     await greenHouse.save();
 
     res.status(200).json(greenHouse);
+    return;
+}
+
+export async function AddDeviceToGreenHouse(req: Request, res: Response): Promise<void> {
+    const accessToken = req.cookies.accessToken;
+    if (!accessToken) {
+        res.status(400).json({error: "No access token provided"});
+        return;
+    }
+
+    const {deviceIP, deviceURL, greenHouseId} = req.body;
+    if (!deviceIP || !deviceURL || !greenHouseId) {
+        res.status(400).json({error: "Missing fields"});
+        return;
+    }
+
+    const payload: TokenPayLoad = jwt.verify(
+        accessToken,
+        process.env.JWT_AT_SECRET!
+    ) as TokenPayLoad;
+    if (!payload) {
+        res.status(400).json({error: "Invalid access token"});
+        return;
+    }
+
+    const user = await User.findOne({email: payload.email});
+    if (!user) {
+        res.status(400).json({error: "User doesn't exist"});
+        return;
+    }
+
+    if (user.role !== "manager" && user.role !== "technician") {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findOne({_id: greenHouseId});
+    if (!greenHouse) {
+        res.status(400).json({error: "Green house doesn't exist"});
+        return;
+    }
+
+    greenHouse.deviceIP = deviceIP;
+    greenHouse.deviceUrl = deviceURL;
+
+    await greenHouse.save();
+
+    res.status(200).json({message: "Device added successfully"});
     return;
 }
 
@@ -527,7 +575,7 @@ export async function disconnectFromGreenHouse(req: Request, res: Response): Pro
 
 export async function seedFakeStats(req: Request, res: Response): Promise<void> {
     const fakeStats = [];
-    const greenhouseId = "67e75b8fff9010bc38bf1cbf";
+    const greenhouseId = "67fee051186d286bd3a51756";
 
     const startDate = new Date("2025-01-01");
     const endDate = new Date("2025-12-31");
@@ -701,7 +749,7 @@ export async function removeWorkerFromGreenhouse(
         return;
     }
 
-    const { greenhouseId, workerId, workerType } = req.body;
+    const {greenhouseId, workerId, workerType} = req.body;
     if (!greenhouseId || !workerId || !workerType) {
         res.status(400).json({error: "Missing required fields"});
         return;
@@ -795,9 +843,9 @@ export async function removeWorkerFromGreenhouse(
         greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
         await greenHouse.save();
 
-        res.status(200).json({ message: "Worker removed successfully" });
+        res.status(200).json({message: "Worker removed successfully"});
     } catch (error) {
         console.error("Error removing worker:", error);
-        res.status(500).json({ error: "Failed to remove worker" });
+        res.status(500).json({error: "Failed to remove worker"});
     }
 }

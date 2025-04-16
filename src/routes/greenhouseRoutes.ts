@@ -1,5 +1,6 @@
 import {Router} from "express";
 import {
+    AddDeviceToGreenHouse,
     connectToGreenHouse,
     createGreenHouse,
     deleteGreenHouse,
@@ -340,10 +341,109 @@ ghRouter.post("/disconnect", disconnectFromGreenHouse);
  */
 ghRouter.post("/workers", getGreenHouseWorkers);
 
+/**
+ * @swagger
+ * /green-houses/seed:
+ *   post:
+ *     summary: Seed fake stats for a greenhouse
+ *     tags: [Greenhouse]
+ *     description: Seeds fake statistics data for testing purposes.
+ *     responses:
+ *       200:
+ *         description: Fake stats seeded successfully.
+ *       500:
+ *         description: Internal server error.
+ */
 ghRouter.post("/seed", seedFakeStats);
 
+/**
+ * @swagger
+ * /green-houses/get-stats:
+ *   post:
+ *     summary: Get greenhouse stats
+ *     tags: [Greenhouse]
+ *     description: Retrieves statistics for a specific greenhouse.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the greenhouse.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved greenhouse stats.
+ *       400:
+ *         description: Bad request - Missing or invalid fields.
+ *       404:
+ *         description: No stats found for the greenhouse.
+ *       500:
+ *         description: Internal server error.
+ */
 ghRouter.post("/get-stats", getGreenHouseStats);
 
-ghRouter.post("/avg", getAvgDailyStats)
+/**
+ * @swagger
+ * /green-houses/avg:
+ *   post:
+ *     summary: Get average daily stats
+ *     tags: [Greenhouse]
+ *     description: Retrieves the average daily statistics for a specific greenhouse.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the greenhouse.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved average daily stats.
+ *       400:
+ *         description: Bad request - Missing or invalid fields.
+ *       404:
+ *         description: Greenhouse not found.
+ *       500:
+ *         description: Internal server error.
+ */
+ghRouter.post("/avg", getAvgDailyStats);
+
+/**
+ * @swagger
+ * /green-houses/add-device:
+ *   post:
+ *     summary: Add a device to a greenhouse
+ *     tags: [Greenhouse]
+ *     description: Associates a new device with a specific greenhouse.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the greenhouse.
+ *               deviceId:
+ *                 type: string
+ *                 description: The ID of the device to add.
+ *     responses:
+ *       200:
+ *         description: Device added successfully.
+ *       400:
+ *         description: Bad request - Missing or invalid fields.
+ *       404:
+ *         description: Greenhouse or device not found.
+ *       500:
+ *         description: Internal server error.
+ */
+ghRouter.post("/add-device", AddDeviceToGreenHouse);
 
 export default ghRouter;

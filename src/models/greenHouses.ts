@@ -42,40 +42,48 @@ const greenHouseSchema = new mongoose.Schema(
                 min: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
                 max: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
             },
             humidity: {
                 min: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
                 max: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
             },
             soilMoisture: {
                 min: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
                 max: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
             },
             ph: {
                 min: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
                 max: {
                     type: Number,
                     required: false,
+                    default: 0,
                 },
             },
         },

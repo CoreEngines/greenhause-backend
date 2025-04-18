@@ -3,12 +3,25 @@ import Greenhouse from "../models/greenHouses";
 import mqtt from "mqtt";
 import {ws} from "../app";
 import GreenHouseStats from "../models/greenHouseStats";
+import {validateSensorData} from "../utils/guard";
 
-interface SensorData {
+export interface SensorData {
     temperature: number;
     humidity: number;
     soilMoisture: number;
     ph: number;
+}
+
+export interface ThresholdValue {
+    min?: number | null | undefined;
+    max?: number | null | undefined;
+}
+
+export interface Thresholds {
+    temperature?: ThresholdValue;
+    humidity?: ThresholdValue;
+    soilMoisture?: ThresholdValue;
+    ph?: ThresholdValue;
 }
 
 const connectedDevices: Record<string, mqtt.MqttClient> = {};
@@ -22,6 +35,7 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
             console.log("[MQTT] Green house doesn't exist");
             return;
         }
+
 
         const {deviceUrl} = greenHouse;
         if (!deviceUrl) {
@@ -56,9 +70,17 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
             const validJsonString = rawSensorData.replace(/'/g, '"');
             const jsonData: SensorData = await JSON.parse(validJsonString); // Convert sensorData to json
 
+            // check if the data is valid and in the thresholds interval
+            // if not create an alert
+            // send email to the user once
+
+            // @ts-ignore
+            const thresholds: Thresholds = greenHouse.thresholds;
+            await validateSensorData(thresholds, greenHouseId, jsonData);
+
             // Establish a websocket connection
-            // TODO: Track connected users and send data to the correct user
             ws.emit("sensorData", {data: rawSensorData});
+
 
             // Check if we should save to database (once per hour)
             const now = Date.now();

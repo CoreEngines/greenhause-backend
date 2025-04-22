@@ -8,6 +8,21 @@ import VerificationToken from "../models/verificationTokens";
 import { generateFormattedToken } from "../utils/verificationToken";
 import { getEmailTemplate, sendEmail } from "../utils/email";
 
+// Define an interface for ManagerDetails
+interface ManagerDetails {
+    organization?: string;
+    phone?: string;
+    officeAddress?: string;
+    userId: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// Define an extended user type that includes managerDetails
+interface UserWithManager extends Omit<InstanceType<typeof User>, "toObject"> {
+    managerDetails?: ManagerDetails;
+}
+
 export async function getAllUsers(req: Request, res: Response): Promise<void> {
     try {
         const users = await User.find();
@@ -28,21 +43,6 @@ export async function getUserById(req: Request, res: Response): Promise<void> {
         console.log(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
-}
-
-// Define an interface for ManagerDetails
-interface ManagerDetails {
-    organization?: string;
-    phone?: string;
-    officeAddress?: string;
-    userId: Types.ObjectId;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-// Define an extended user type that includes managerDetails
-interface UserWithManager extends Omit<InstanceType<typeof User>, "toObject"> {
-    managerDetails?: ManagerDetails;
 }
 
 export async function getUserByToken(req: Request, res: Response): Promise<void> {

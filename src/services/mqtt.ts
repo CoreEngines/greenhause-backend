@@ -70,11 +70,7 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
             const validJsonString = rawSensorData.replace(/'/g, '"');
             const jsonData: SensorData = await JSON.parse(validJsonString); // Convert sensorData to json
 
-            // check if the data is valid and in the thresholds interval
-            // if not create an alert
-            // send email to the user once
-
-            // @ts-ignore
+            // @ts-expect-error - greenHouse.thresholds is dynamically typed and may not match Thresholds interface exactly
             const thresholds: Thresholds = greenHouse.thresholds;
             await validateSensorData(thresholds, greenHouseId, jsonData);
 

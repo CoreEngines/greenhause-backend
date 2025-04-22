@@ -1,6 +1,25 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+export interface IUser {
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    email: string;
+    password: string | null;
+    role: "manager" | "farmer" | "technician";
+    isAdmin: boolean;
+    isVerified: boolean;
+    avatar: string | null;
+    isDeleted: boolean;
+    providers: Array<{
+        providerId: string;
+        providerName: "local" | "google" | "github";
+    }>;
+    deletedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+const userSchema = new mongoose.Schema<IUser>(
     {
         name: {
             type: String,
@@ -66,4 +85,4 @@ userSchema.index({ deletedAt: 1 }, { expireAfterSeconds: softDeletionPeriod });
 
 userSchema.index({ "providers.providerId": 1 }, { unique: true, sparse: true });
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model<IUser>("User", userSchema);

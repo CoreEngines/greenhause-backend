@@ -1,31 +1,14 @@
 import {Request, Response} from "express";
 import Alert from "../models/alerts";
-import {TokenPayLoad} from "../utils/jwt";
-import jwt from "jsonwebtoken";
-import User from "../models/users";
 import GreenHouse from "../models/greenHouses";
 import {ws} from "../app";
+import {validateUser as validateAndGetUser} from "../middlewares/authMiddleware";
 
 export async function reportAlertController(req: Request, res: Response): Promise<void> {
+    const user = await validateAndGetUser(req, res);
+    if (!user) return;
+
     try {
-        const accessToken = req.cookies.accessToken;
-        if (!accessToken) {
-            res.status(400).json({error: "No access token provided"});
-            return;
-        }
-
-        const payload: TokenPayLoad = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
-        if (!payload) {
-            res.status(400).json({error: "Invalid access token"});
-            return;
-        }
-
-        const user = await User.findOne({email: payload.email});
-        if (!user) {
-            res.status(400).json({error: "User doesn't exist"});
-            return;
-        }
-
         const {greenHouseId, alertType, title, description} = req.body;
         if (!greenHouseId || !alertType || !title || !description) {
             res.status(400).json({message: "All fields are required"});
@@ -68,25 +51,8 @@ export async function reportAlertController(req: Request, res: Response): Promis
 }
 
 export async function getAllAlerts(req: Request, res: Response): Promise<void> {
-    const accessToken = req.cookies.accessToken;
-    if (!accessToken) {
-        res.status(400).json({error: "No access token provided"});
-        return;
-    }
-    const payload: TokenPayLoad = jwt.verify(
-        accessToken,
-        process.env.JWT_AT_SECRET!
-    ) as TokenPayLoad;
-    if (!payload) {
-        res.status(400).json({error: "Invalid access token"});
-        return;
-    }
-
-    const user = await User.findOne({email: payload.email});
-    if (!user) {
-        res.status(400).json({error: "User doesn't exist"});
-        return;
-    }
+    const user = await validateAndGetUser(req, res);
+    if (!user) return;
 
     const {greenHouseId} = req.body;
     if (!greenHouseId) {

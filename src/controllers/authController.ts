@@ -60,7 +60,7 @@ export async function signUp(req: Request, res: Response) {
         })
 
         newUser.avatar = `https://avatar.iran.liara.run/public/boy?username=${newUser._id}`; // ✅ Set avatar field
-        await newUser.save(); // ✅ Save updated user
+        await newUser.save(); 
 
 
         await Promise.all([newUser.save(), manager.save()]);
@@ -106,6 +106,11 @@ export async function signIn(req: Request, res: Response): Promise<void> {
             res.status(400).json({error: "Unauthorized"});
             return;
         }
+        if (!user.password) {
+            res.status(400).json({error: "Invalid credentials"});
+            return;
+        }
+
         const match = await comparePassword(password, user.password);
         if (!match) {
             res.status(400).json({error: "Invalid credentials"});

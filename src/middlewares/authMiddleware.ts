@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { accessTokenDuration, generateAccessToken, TokenPayLoad } from "../utils/jwt";
 import User from "../models/users";
+import { IUser } from "../models/users";
 
 export async function isAuthenticated(req: Request, res: Response, next: NextFunction): Promise<void> {
     const accessToken = req.cookies.accessToken;
@@ -104,4 +105,38 @@ export async function isDeleted(req: Request, res: Response, next: NextFunction)
         res.status(500).json({ error: "Unauthorized" });
     }
 
+}
+
+export async function validateUser(req: Request, res: Response): Promise<IUser  | null> {
+    try {
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            res.status(400).json({error: "No access token provided"});
+            return null;
+        }
+
+        const payload: TokenPayLoad = jwt.verify(accessToken, process.env.JWT_AT_SECRET!) as TokenPayLoad;
+        if (!payload) {
+            res.status(400).json({error: "Invalid access token"});
+            
+            return null;
+        }
+
+        const user = await User.findOne({email: payload.email});
+        if (!user) {
+            res.status(400).json({error: "User doesn't exist"});
+            return null;
+        }
+
+        if (user.isDeleted) {
+            res.status(400).json({error: "User is deleted"});
+            return null;
+        }
+
+        return user;
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({error: "Unauthorized"});
+        return null;
+    }
 }

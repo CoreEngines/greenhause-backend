@@ -1,6 +1,7 @@
 import {Request, Response} from "express";
 import GreenHouse from "../models/greenHouses";
 import Manager from "../models/managers";
+import Sensor from "../models/sensors";
 import Farmer from "../models/farmers";
 import Technician from "../models/technicians";
 import GreenHouseStats from "../models/greenHouseStats";
@@ -615,4 +616,131 @@ export async function removeWorkerFromGreenhouse(
         console.error("Error removing worker:", error);
         res.status(500).json({error: "Failed to remove worker"});
     }
+}
+
+export async function addSensorToGreenHouse(req: Request, res: Response): Promise<void> {
+    const user = await validateAndGetUser(req, res);
+    if (!user) return;
+
+    if (user.role !== "manager" && user.role !== "technician") {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const {
+        greenHouseId,
+        name,
+        type,
+        quantity,
+        voltageRange,
+        maxCurrent,
+        minTemperature,
+        maxTemperature,
+        accuracyTemperature,
+        minHumidity,
+        maxHumidity,
+        accuracyHumidity,
+        samplingRate,
+        physicalDimensions_length,
+        physicalDimensions_width,
+        physicalDimensions_height,
+        physicalDimensions_unit,
+        pinConfiguration_count,
+        pinConfiguration_spacing,
+    } = req.body;
+
+    if (
+        !greenHouseId ||
+        !name ||
+        !type ||
+        !quantity
+    ) {
+        res.status(400).json({error: "Missing fields"});
+        return;
+    }
+
+    if (!greenHouseId) {
+        res.status(400).json({error: "Missing fields"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findById(greenHouseId);
+    if (!greenHouse) {
+        res.status(404).json({error: "Greenhouse not found"});
+        return;
+    }
+
+    
+    const sensor = new Sensor({
+        name: name,
+        type: type,
+        quantity: quantity,
+        technicalSpecifications: {
+            powerRequirements: {
+                voltageRange: voltageRange,
+                maxCurrent: maxCurrent,
+            },
+            measurementRange: {
+                temperature: {
+                    min: minTemperature,
+                    max: maxTemperature,
+                    accuracy: accuracyTemperature,
+                },
+            },
+            humidity: {
+                min: minHumidity,
+                max: maxHumidity,
+                accuracy: accuracyHumidity,
+            },
+            samplingRate: samplingRate,
+            physicalDimensions: {
+                length: physicalDimensions_length,
+                width: physicalDimensions_width,
+                height: physicalDimensions_height,
+                unit: physicalDimensions_unit,
+            },
+            pinConfiguration: {
+                count: pinConfiguration_count,
+                spacing: pinConfiguration_spacing,
+            },
+        },
+    });
+
+    await sensor.save();
+
+    greenHouse.sensors.push(sensor._id);
+    await greenHouse.save();
+
+    res.status(200).json({message: "Sensor added successfully"});
+    return;
+}
+
+export async function getGreenHouseSensors(req: Request, res: Response): Promise<void> {
+    const user = await validateAndGetUser(req, res);
+    if (!user) return;
+
+    const {greenHouseId} = req.body;
+
+    if (!greenHouseId) {
+        res.status(400).json({error: "Missing fields"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findById(greenHouseId);
+    if (!greenHouse) {
+        res.status(404).json({error: "Greenhouse not found"});
+        return;
+    }
+
+    const sensorIds = greenHouse.sensors;
+
+    const sensors = await Sensor.find({_id: {$in: sensorIds}});
+
+    if (!sensors) {
+        res.status(404).json({error: "No sensors found"});
+        return;
+    }
+
+    res.status(200).json(sensors);
+    return;
 }

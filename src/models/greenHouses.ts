@@ -87,6 +87,12 @@ const greenHouseSchema = new mongoose.Schema(
                 },
             },
         },
+        sensors: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Sensor",
+            },
+        ],
         farmers: [
             {
                 type: mongoose.Schema.Types.ObjectId,

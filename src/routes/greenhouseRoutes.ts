@@ -1,12 +1,14 @@
 import {Router} from "express";
 import {
     AddDeviceToGreenHouse,
+    addSensorToGreenHouse,
     connectToGreenHouse,
     createGreenHouse,
     deleteGreenHouse,
     disconnectFromGreenHouse,
     getAvgDailyStats,
     getGreenHouses,
+    getGreenHouseSensors,
     getGreenHouseStats,
     getGreenHouseWorkers,
     seedFakeStats,
@@ -445,5 +447,120 @@ ghRouter.post("/avg", getAvgDailyStats);
  *         description: Internal server error.
  */
 ghRouter.post("/add-device", AddDeviceToGreenHouse);
+
+/**
+ * @swagger
+ * /green-houses/add-sensor:
+ *   post:
+ *     summary: Add a sensor to a greenhouse
+ *     tags: [Greenhouse]
+ *     description: Adds a sensor with technical specifications to a specific greenhouse.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - greenHouseId
+ *               - name
+ *               - type
+ *               - quantity
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the greenhouse.
+ *               name:
+ *                 type: string
+ *                 description: Name of the sensor.
+ *               type:
+ *                 type: string
+ *                 description: Type of the sensor.
+ *               quantity:
+ *                 type: number
+ *                 description: Quantity of sensors to add.
+ *               voltageRange:
+ *                 type: string
+ *                 description: Voltage range required for the sensor.
+ *               maxCurrent:
+ *                 type: number
+ *                 description: Maximum current in amps.
+ *               minTemperature:
+ *                 type: number
+ *                 description: Minimum temperature the sensor can measure.
+ *               maxTemperature:
+ *                 type: number
+ *                 description: Maximum temperature the sensor can measure.
+ *               accuracyTemperature:
+ *                 type: number
+ *                 description: Accuracy of temperature measurement.
+ *               minHumidity:
+ *                 type: number
+ *                 description: Minimum humidity the sensor can measure.
+ *               maxHumidity:
+ *                 type: number
+ *                 description: Maximum humidity the sensor can measure.
+ *               accuracyHumidity:
+ *                 type: number
+ *                 description: Accuracy of humidity measurement.
+ *               samplingRate:
+ *                 type: number
+ *                 description: Sampling rate in Hz.
+ *               physicalDimensions_length:
+ *                 type: number
+ *                 description: Physical length of the sensor.
+ *               physicalDimensions_width:
+ *                 type: number
+ *                 description: Physical width of the sensor.
+ *               physicalDimensions_height:
+ *                 type: number
+ *                 description: Physical height of the sensor.
+ *               physicalDimensions_unit:
+ *                 type: string
+ *                 description: Unit of measurement for physical dimensions (e.g., cm, mm).
+ *               pinConfiguration_count:
+ *                 type: number
+ *                 description: Number of pins in the sensor.
+ *               pinConfiguration_spacing:
+ *                 type: number
+ *                 description: Spacing between pins.
+ *     responses:
+ *       200:
+ *         description: Sensor added successfully.
+ *       400:
+ *         description: Bad request - Missing or invalid fields.
+ *       404:
+ *         description: Greenhouse or sensor not found.
+ *       500:
+ *         description: Internal server error.
+ */
+ghRouter.post("/add-sensor", addSensorToGreenHouse);
+
+/**
+ * @swagger
+ * /green-houses/get-sensors:
+ *   post:
+ *     summary: Get sensors for a greenhouse
+ *     tags: [Greenhouse]
+ *     description: Retrieves all sensors associated with a specific greenhouse.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               greenHouseId:
+ *                 type: string
+ *                 description: The ID of the greenhouse.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved greenhouse sensors.
+ *       400:
+ *         description: Bad request - Missing or invalid fields.
+ *       404:
+ *         description: Greenhouse not found.
+ */
+ghRouter.post("/get-sensors", getGreenHouseSensors);
 
 export default ghRouter;

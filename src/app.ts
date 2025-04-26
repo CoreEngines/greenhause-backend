@@ -18,6 +18,7 @@ import managerRoutes from "./routes/managerRoutes";
 import * as http from "node:http";
 import {Server} from "socket.io";
 import reportsAlertsRouter from "./routes/reportsAlertsRoutes";
+import reportsRouter from "./routes/reportRoutes";
 
 dotenv.config();
 
@@ -62,6 +63,7 @@ app.use("/users", isAuthenticated, isDeleted, usersRouter);
 app.use("/green-houses", isAuthenticated, isDeleted, ghRouter);
 app.use("/manager", isAuthenticated, isDeleted, managerRoutes);
 app.use("/reports-alerts", isAuthenticated, isDeleted, reportsAlertsRouter);
+app.use("/reports",isAuthenticated, isDeleted, reportsRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({message: "Hello, World!"});

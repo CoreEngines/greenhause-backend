@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Report from "../models/report";
 import {validateUser as validateAndGetUser} from "../middlewares/authMiddleware";
 import Manager from "../models/managers";
+import greenHouses from "../models/greenHouses";
 
 
 // Create a new report
@@ -9,15 +10,23 @@ export async function createReport(req: Request, res: Response): Promise<void> {
     try {
         const { greenhouseId, title, description } = req.body;
         const user = await validateAndGetUser(req, res);
+        const greenhouse = await greenHouses.findOne({_id: greenhouseId})
 
         if (!user) {
             res.status(401).json({ error: "Unauthorized" });
             return; 
         }
 
+        if (!greenhouse) {
+            res.status(401).json({ error: "Unauthorized" });
+            return; 
+        }
+
         const newReport = new Report({
             userId: user._id,
+            userName: user.name,
             greenhouseId,
+            greenhouseName: greenhouse.name,
             title,
             description,
             date: new Date(),

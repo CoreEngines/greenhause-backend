@@ -6,9 +6,17 @@ const reportSchema = new mongoose.Schema({
             ref: "User",
             required: true,
         },
+        userName: {
+            type: String,
+            required: true,
+        },
         greenhouseId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "GreenHouse",
+            required: true,
+        },
+        greenhouseName: {
+            type: String,
             required: true,
         },
         title: {

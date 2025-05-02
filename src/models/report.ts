@@ -15,6 +15,17 @@ const reportSchema = new mongoose.Schema({
             ref: "GreenHouse",
             required: true,
         },
+        resolved: {
+            type: String,
+            required: true,
+            enum: ["read","unread"],
+            default: "unread"
+        },
+        urgency: {
+            type: String,
+            enum: ["low", "medium","high"],
+            required: true,
+        },
         greenhouseName: {
             type: String,
             required: true,

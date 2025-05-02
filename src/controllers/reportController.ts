@@ -107,11 +107,6 @@ export async function deleteReport(req: Request, res: Response): Promise<void> {
             return;
         }
 
-        if(greenhouse.managerId !== manager._id) {
-            res.status(400).json({error: "Unauthorized"});
-            return;
-        }
-
         await Report.deleteOne({ _id: reportId });
         res.status(200).json({ message: "Report deleted successfully" });
 

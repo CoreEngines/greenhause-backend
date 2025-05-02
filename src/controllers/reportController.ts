@@ -94,14 +94,21 @@ export async function deleteReport(req: Request, res: Response): Promise<void> {
 
         const report = await Report.findById(reportId);
 
+        
         if (!report) {
             res.status(404).json({ error: "Report not found" });
             return;
         }
+        
+        const greenhouse = await greenHouses.findById(report.greenhouseId); 
+        
+        if (!greenhouse) {
+            res.status(404).json({ error: "Greenhouse not found" });
+            return;
+        }
 
-        // Only allow the owner to delete the report
-        if (report.userId.toString() !== user._id.toString()) {
-            res.status(403).json({ error: "Forbidden: You cannot delete this report" });
+        if(greenhouse.managerId !== manager._id) {
+            res.status(400).json({error: "Unauthorized"});
             return;
         }
 
@@ -110,6 +117,58 @@ export async function deleteReport(req: Request, res: Response): Promise<void> {
 
     } catch (error) {
         console.error("Error deleting report:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+
+export async function updateReport(req: Request, res: Response): Promise<void> {
+    try {
+        const { reportId } = req.body;
+        const user = await validateAndGetUser(req, res);
+
+        if (!user) {
+            res.status(401).json({ error: "Unauthorized" });
+            return;
+        }
+
+        if (user.role !== "manager") {
+            res.status(403).json({ error: "Unauthorized" });
+            return;
+        }
+
+        const manager = await Manager.findOne({ userId: user._id });
+        if (!manager) {
+            res.status(400).json({ error: "Manager doesn't exist" });
+            return;
+        }
+
+        const report = await Report.findById(reportId);
+        if (!report) {
+            res.status(404).json({ error: "Report not found" });
+            return;
+        }
+
+        const greenhouse = await greenHouses.findById(report.greenhouseId);
+        if (!greenhouse) {
+            res.status(404).json({ error: "Greenhouse not found" });
+            return;
+        }
+
+        if (greenhouse.managerId.toString() !== manager._id.toString()) {
+            res.status(403).json({ error: "Unauthorized" });
+            return;
+        }
+
+        // Update fields if provided
+        report.resolved = "read";
+
+        await report.save();
+
+        res.status(200).json({ message: "Report updated successfully", report });
+
+    } catch (error) {
+        console.error("Error updating report:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 }

@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import { createReport, getAllReports } from '../controllers/reportController';
+import { createReport, deleteReport, getAllReports, updateReport } from '../controllers/reportController';
 
 const reportsRouter = Router();
 
@@ -124,5 +124,110 @@ reportsRouter.post("/create-report", createReport);
  *         description: Internal server error
  */
 reportsRouter.post("/get-reports", getAllReports);
+
+
+/**
+ * @swagger
+ * /reports/delete-reports:
+ *   post:
+ *     summary: Delete a report (Manager only)
+ *     tags: [Reports]
+ *     description: Deletes a report based on the given report ID. Only accessible to users with the "manager" role.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reportId
+ *             properties:
+ *               reportId:
+ *                 type: string
+ *                 description: The ID of the report to delete.
+ *                 example: 6633a2a5c4f1a5d74b65f4e1
+ *     responses:
+ *       200:
+ *         description: Report deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Report deleted successfully
+ *       400:
+ *         description: Unauthorized or manager not found
+ *       401:
+ *         description: Unauthorized (User not authenticated)
+ *       404:
+ *         description: Report or greenhouse not found
+ *       500:
+ *         description: Internal server error
+ */
+reportsRouter.post('/delete-reports', deleteReport);
+
+
+/**
+ * @swagger
+ * /reports/mark-read:
+ *   post:
+ *     summary: Update a report (Manager only)
+ *     tags: [Reports]
+ *     description: Update a report’s title, description, or urgency. Only accessible to users with the "manager" role and ownership of the greenhouse.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reportId
+ *             properties:
+ *               reportId:
+ *                 type: string
+ *                 description: The ID of the report to update.
+ *                 example: 6633a2a5c4f1a5d74b65f4e1
+ *               title:
+ *                 type: string
+ *                 description: New title for the report.
+ *                 example: Water system failure
+ *               description:
+ *                 type: string
+ *                 description: New description for the report.
+ *                 example: The automatic watering system failed overnight.
+ *               urgency:
+ *                 type: string
+ *                 enum: [low, medium, high]
+ *                 description: New urgency level.
+ *                 example: high
+ *     responses:
+ *       200:
+ *         description: Report updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Report updated successfully
+ *                 report:
+ *                   $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Unauthorized or manager not found
+ *       401:
+ *         description: Unauthorized (User not authenticated)
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: Report or greenhouse not found
+ *       500:
+ *         description: Internal server error
+ */
+reportsRouter.post('/mark-read', updateReport);
+
+
 
 export default reportsRouter;

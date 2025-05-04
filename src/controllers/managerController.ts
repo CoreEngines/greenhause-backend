@@ -259,3 +259,70 @@ export async function getAllManagerGrennhouses(
     res.status(200).json({greenhouses});
     return;
 }
+//removeworker
+export async function removeWorkerFromGreenhouse(req: Request, res: Response): Promise<void> {
+    const user = await validateAndGetUser(req, res);
+    if (!user || user.role !== "manager") {
+        res.status(403).json({error: "Unauthorized"});
+        return;
+    }
+
+    const manager = await Manager.findOne({userId: user._id});
+    if (!manager) {
+        res.status(403).json({error: "Manager doesn't exist"});
+        return;
+    }
+
+    const {workerId, workerType, greenhouseId} = req.body;
+
+    if (!workerId || !workerType || !greenhouseId) {
+        res.status(400).json({error: "Missing required fields"});
+        return;
+    }
+
+    if (!["farmer", "technician"].includes(workerType)) {
+        res.status(400).json({error: "Invalid worker type"});
+        return;
+    }
+
+    const greenhouse = await Greenhouse.findById(greenhouseId);
+    if (!greenhouse) {
+        res.status(404).json({error: "Greenhouse not found"});
+        return;
+    }
+
+    if (greenhouse.managerId.toString() !== manager._id.toString()) {
+        res.status(403).json({error: "Unauthorized to modify this greenhouse"});
+        return;
+    }
+
+    if (workerType === "farmer") {
+        const farmer = await Farmer.findById(workerId);
+        if (!farmer) {
+            res.status(404).json({error: "Worker not found"});
+            return;
+        }
+
+        farmer.greenHouseIds = farmer.greenHouseIds.filter(id => id.toString() !== greenhouseId);
+        await farmer.save();
+
+        greenhouse.farmers = greenhouse.farmers.filter(id => id.toString() !== farmer._id.toString());
+
+    } else if (workerType === "technician") {
+        const technician = await Technician.findById(workerId);
+        if (!technician) {
+            res.status(404).json({error: "Worker not found"});
+            return;
+        }
+
+        technician.greenHouseIds = technician.greenHouseIds.filter(id => id.toString() !== greenhouseId);
+        await technician.save();
+
+        greenhouse.technicians = greenhouse.technicians.filter(id => id.toString() !== technician._id.toString());
+    }
+
+    greenhouse.staffCount = (greenhouse.farmers?.length || 0) + (greenhouse.technicians?.length || 0);
+    await greenhouse.save();
+
+    res.status(200).json({message: "Worker removed successfully"});
+}

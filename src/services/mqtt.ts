@@ -31,8 +31,8 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
     try {
         const greenHouse = await Greenhouse.findOne({_id: greenHouseId});
         if (!greenHouse) {
-            res.status(400).json({error: "Green house doesn't exist"});
             console.log("[MQTT] Green house doesn't exist");
+            res.status(400).json({error: "Green house doesn't exist"});
             return;
         }
 

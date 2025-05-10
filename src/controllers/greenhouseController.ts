@@ -374,13 +374,13 @@ export async function connectToGreenHouse(req: Request, res: Response): Promise<
     // mqtt connection
     try {
         await ConnectToDevice(greenHouseId, res);
+        res.status(200).json({message: "Connected to GreenHouse device"});
+        return;
     } catch (error) {
         console.error(error);
         res.status(500).json({error: "Failed to connect to GreenHouse device"});
         return;
     }
-    res.status(200).json({message: "Connected to GreenHouse device"});
-    return;
 }
 
 export async function disconnectFromGreenHouse(req: Request, res: Response): Promise<void> {

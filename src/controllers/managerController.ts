@@ -7,6 +7,7 @@ import Technician from "../models/technicians";
 import {hashPassword} from "../utils/hash";
 import mongoose from "mongoose";
 import {validateUser as validateAndGetUser} from "../middlewares/authMiddleware";
+import {getEmailTemplate, sendEmail} from "../utils/email";
 
 export async function AddFarmer(req: Request, res: Response): Promise<void> {
     const user = await validateAndGetUser(req, res);
@@ -120,11 +121,11 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
     }
 
     let technicianUser = await User.findOne({email: technicianEmail});
+    let randomPassword: string = "";
 
     if (!technicianUser) {
         // Generate a random password for a new user
-        // const randomPassword = Math.random().toString(36).slice(-8);
-        const randomPassword = "aptget123";
+        randomPassword = Math.random().toString(36).slice(-8);
         console.log(randomPassword);
         const hashedPassword = await hashPassword(randomPassword);
 
@@ -179,6 +180,21 @@ export async function AddTechnician(req: Request, res: Response): Promise<void> 
     // Update staff count before saving
     greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
     await greenHouse.save();
+
+    const emailBody = getEmailTemplate(
+        "account-password-template",
+         null,
+         randomPassword,
+    );
+    const subject: string = "Your Account Credentials: Login Details";
+
+    try {
+        await sendEmail(technicianUser.email, subject, emailBody);
+    } catch (error) {
+        console.error("Error sending email:", error);
+        res.status(500).json({error: "Failed to send email"});
+        return;
+    }
 
     res.status(201).json({
         message: "Technician added successfully",

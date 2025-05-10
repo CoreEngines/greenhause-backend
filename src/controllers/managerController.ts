@@ -8,6 +8,7 @@ import {hashPassword} from "../utils/hash";
 import mongoose from "mongoose";
 import {validateUser as validateAndGetUser} from "../middlewares/authMiddleware";
 import {getEmailTemplate, sendEmail} from "../utils/email";
+import GreenHouse from "../models/greenHouses";
 
 export async function AddFarmer(req: Request, res: Response): Promise<void> {
     const user = await validateAndGetUser(req, res);
@@ -252,6 +253,156 @@ export async function getAllWorkers(
     const workers = [...farmers, ...technicians];
 
     res.status(200).json({workers});
+}
+
+
+export async function removeFarmer(
+    req: Request,
+    res: Response
+): Promise<void> {
+    const user = await validateAndGetUser(req, res);
+    if (!user) return;
+
+    if (user.role !== "manager") {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const {greenhouseId, workerId, workerType} = req.body;
+    if (!greenhouseId || !workerId || !workerType) {
+        res.status(400).json({error: "Missing required fields"});
+        return;
+    }
+
+    if (workerType !== "farmer") {
+        res.status(400).json({error: "Invalid worker type"});
+        return;
+    }
+
+    const manager = await Manager.findOne({userId: user._id});
+    if (!manager) {
+        res.status(400).json({error: "Manager doesn't exist"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findById(greenhouseId);
+    if (!greenHouse) {
+        res.status(404).json({error: "Greenhouse not found"});
+        return;
+    }
+
+    if (greenHouse.managerId.toString() !== manager._id.toString()) {
+        res.status(403).json({error: "Unauthorized to modify this greenhouse"});
+        return;
+    }
+
+    const farmer = await Farmer.findById(workerId);
+    if (!farmer) {
+        res.status(404).json({error: "Farmer not found"});
+        return;
+    }
+
+    // Remove greenhouse from farmer's list
+    farmer.greenHouseIds = farmer.greenHouseIds.filter(
+        id => id.toString() !== greenhouseId
+    );
+    await farmer.save();
+
+    // Remove farmer from greenhouse's list
+    greenHouse.farmers = greenHouse.farmers.filter(
+        id => id.toString() !== workerId
+    );
+
+    // Update staff count
+    greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
+    await greenHouse.save();
+
+    const farmerAccount = await User.findById(farmer.userId);
+    if (!farmerAccount) {
+        throw new Error("Farmer account not found");
+    }
+
+    farmerAccount.deletedAt = new Date();
+    farmerAccount.isDeleted = true;
+
+    await farmerAccount.save();
+
+    res.status(200).json({message: "Farmer removed successfully"});
+}
+
+
+export async function removeTechnician(
+    req: Request,
+    res: Response
+): Promise<void> {
+    const user = await validateAndGetUser(req, res);
+    if (!user) return;
+
+    if (user.role !== "manager") {
+        res.status(400).json({error: "Unauthorized"});
+        return;
+    }
+
+    const {greenhouseId, workerId, workerType} = req.body;
+    if (!greenhouseId || !workerId || !workerType) {
+        res.status(400).json({error: "Missing required fields"});
+        return;
+    }
+
+    if (workerType !== "technician") {
+        res.status(400).json({error: "Invalid worker type"});
+        return;
+    }
+
+    const manager = await Manager.findOne({userId: user._id});
+    if (!manager) {
+        res.status(400).json({error: "Manager doesn't exist"});
+        return;
+    }
+
+    const greenHouse = await GreenHouse.findById(greenhouseId);
+    if (!greenHouse) {
+        res.status(404).json({error: "Greenhouse not found"});
+        return;
+    }
+
+    if (greenHouse.managerId.toString() !== manager._id.toString()) {
+        res.status(403).json({error: "Unauthorized to modify this greenhouse"});
+        return;
+    }
+
+    const technician = await Technician.findById(workerId);
+    if (!technician) {
+        res.status(404).json({error: "Technician not found"});
+        return;
+    }
+
+    // Remove greenhouse from farmer's list
+    technician.greenHouseIds = technician.greenHouseIds.filter(
+        id => id.toString() !== greenhouseId
+    );
+    await technician.save();
+
+    // Remove farmer from greenhouse's list
+    greenHouse.farmers = greenHouse.farmers.filter(
+        id => id.toString() !== workerId
+    );
+
+    // Update staff count
+    greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
+    await greenHouse.save();
+
+    const technicianAccount = await User.findById(technician.userId);
+    if (!technicianAccount) {
+        throw new Error("Technician account not found");
+    }
+
+    technicianAccount.deletedAt = new Date();
+    technicianAccount.isDeleted = true;
+
+    await technicianAccount.save();
+
+    res.status(200).json({message: "Technician removed successfully"});
 }
 
 export async function getAllManagerGrennhouses(

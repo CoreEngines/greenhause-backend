@@ -1,6 +1,6 @@
 import {Router} from "express";
 import {AddFarmer, AddTechnician, getAllWorkers} from "../controllers/managerController";
-import {removeWorkerFromGreenhouse} from "../controllers/greenhouseController";
+import {removeFarmer, removeTechnician} from "../controllers/managerController";
 
 const managerRoutes = Router();
 
@@ -57,11 +57,11 @@ managerRoutes.get("/workers", getAllWorkers);
 
 /**
  * @swagger
- * /manager/remove-worker:
+ * /manager/remove-farmer:
  *   post:
- *     summary: Remove a worker from a greenhouse
+ *     summary: Remove a farmer
  *     tags: [Manager]
- *     description: Removes a farmer or technician from a greenhouse
+ *     description: Removes a farmer from a greenhouse and deactivates their account.
  *     requestBody:
  *       required: true
  *       content:
@@ -75,17 +75,20 @@ managerRoutes.get("/workers", getAllWorkers);
  *             properties:
  *               greenhouseId:
  *                 type: string
- *                 description: The ID of the greenhouse
+ *                 description: ID of the greenhouse from which the farmer is to be removed.
+ *                 example: "64ac123e4305d1a12bc56789"
  *               workerId:
  *                 type: string
- *                 description: The ID of the worker to remove
+ *                 description: ID of the farmer to be removed.
+ *                 example: "64bce2d5305d1b22cf456789"
  *               workerType:
  *                 type: string
- *                 enum: [farmer, technician]
- *                 description: The type of worker to remove
+ *                 enum: [farmer]
+ *                 description: Type of worker to be removed (must be "farmer").
+ *                 example: "farmer"
  *     responses:
  *       200:
- *         description: Worker removed successfully
+ *         description: Farmer removed successfully.
  *         content:
  *           application/json:
  *             schema:
@@ -93,9 +96,9 @@ managerRoutes.get("/workers", getAllWorkers);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Worker removed successfully"
+ *                   example: "Farmer removed successfully"
  *       400:
- *         description: Bad request
+ *         description: Bad request. Missing or invalid fields, or unauthorized action.
  *         content:
  *           application/json:
  *             schema:
@@ -103,14 +106,9 @@ managerRoutes.get("/workers", getAllWorkers);
  *               properties:
  *                 error:
  *                   type: string
- *                   examples:
- *                     noToken: "No access token provided"
- *                     invalidToken: "Invalid access token"
- *                     missingFields: "Missing required fields"
- *                     invalidType: "Invalid worker type"
- *                     unauthorized: "Unauthorized"
+ *                   example: "Missing required fields"
  *       403:
- *         description: Forbidden
+ *         description: Forbidden. Manager not authorized to modify this greenhouse.
  *         content:
  *           application/json:
  *             schema:
@@ -120,7 +118,7 @@ managerRoutes.get("/workers", getAllWorkers);
  *                   type: string
  *                   example: "Unauthorized to modify this greenhouse"
  *       404:
- *         description: Not found
+ *         description: Not found. Greenhouse or farmer not found.
  *         content:
  *           application/json:
  *             schema:
@@ -128,11 +126,56 @@ managerRoutes.get("/workers", getAllWorkers);
  *               properties:
  *                 error:
  *                   type: string
- *                   examples:
- *                     notFound: "Greenhouse not found"
- *                     workerNotFound: "Worker not found"
+ *                   example: "Farmer not found"
  *       500:
- *         description: Internal server error
+ *         description: Internal server error.
+ */
+managerRoutes.post("/remove-farmer", removeFarmer);
+
+/**
+ * @swagger
+ * /manager/remove-technician:
+ *   post:
+ *     summary: Remove a technician
+ *     tags: [Manager]
+ *     description: Removes a technician from a greenhouse and deactivates their account.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - greenhouseId
+ *               - workerId
+ *               - workerType
+ *             properties:
+ *               greenhouseId:
+ *                 type: string
+ *                 description: ID of the greenhouse from which the technician is to be removed.
+ *                 example: "64de234f4305d1a45af78912"
+ *               workerId:
+ *                 type: string
+ *                 description: ID of the technician to be removed.
+ *                 example: "64cfe3a6305d1b33da567123"
+ *               workerType:
+ *                 type: string
+ *                 enum: [technician]
+ *                 description: Type of worker to be removed (must be "technician").
+ *                 example: "technician"
+ *     responses:
+ *       200:
+ *         description: Technician removed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Technician removed successfully"
+ *       400:
+ *         description: Bad request. Missing or invalid fields, or unauthorized action.
  *         content:
  *           application/json:
  *             schema:
@@ -140,8 +183,30 @@ managerRoutes.get("/workers", getAllWorkers);
  *               properties:
  *                 error:
  *                   type: string
- *                   example: "Failed to remove worker"
+ *                   example: "Missing required fields"
+ *       403:
+ *         description: Forbidden. Manager not authorized to modify this greenhouse.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Unauthorized to modify this greenhouse"
+ *       404:
+ *         description: Not found. Greenhouse or technician not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Technician not found"
+ *       500:
+ *         description: Internal server error.
  */
-managerRoutes.post("/remove-worker", removeWorkerFromGreenhouse);
+managerRoutes.post("/remove-technician", removeTechnician);
 
 export default managerRoutes;

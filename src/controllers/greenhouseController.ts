@@ -659,11 +659,6 @@ export async function addSensorToGreenHouse(req: Request, res: Response): Promis
         return;
     }
 
-    if (!greenHouseId) {
-        res.status(400).json({error: "Missing fields"});
-        return;
-    }
-
     const greenHouse = await GreenHouse.findById(greenHouseId);
     if (!greenHouse) {
         res.status(404).json({error: "Greenhouse not found"});

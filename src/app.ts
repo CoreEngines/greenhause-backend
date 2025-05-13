@@ -63,7 +63,7 @@ app.use("/users", isAuthenticated, isDeleted, usersRouter);
 app.use("/green-houses", isAuthenticated, isDeleted, ghRouter);
 app.use("/manager", isAuthenticated, isDeleted, managerRoutes);
 app.use("/reports-alerts", isAuthenticated, isDeleted, reportsAlertsRouter);
-app.use("/reports",isAuthenticated, isDeleted, reportsRouter);
+app.use("/reports", isAuthenticated, isDeleted, reportsRouter);
 
 app.get("/", (req: Request, res: Response) => {
     res.status(200).json({message: "Hello, World!"});
@@ -77,6 +77,8 @@ wss.listen(3031, () => {
     console.log("[WSS] Server is running on port 3031");
 });
 
+export const actuatorStates: { [greenhouseId: string]: boolean } = {};
+
 ws.on("connection", (socket) => {
     console.log("[WSS] New client connected:", socket.id);
 
@@ -88,6 +90,14 @@ ws.on("connection", (socket) => {
         socket.join(greenHouseId);
         console.log(`User ${socket.id} joined greenhouse ${greenHouseId}`);
     });
+
+    socket.on("actuatorControl", (data: { greenhouseId: string; isEnabled: boolean }) => {
+        const {greenhouseId, isEnabled} = data;
+
+        actuatorStates[greenhouseId] = isEnabled;
+        console.log(`[WS] Actuator state received: Greenhouse ID = ${greenhouseId}, Enabled = ${isEnabled}`);
+    });
+
 });
 
 mongoose.connection.on("open", () => {

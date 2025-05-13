@@ -1,7 +1,7 @@
 import {Response} from "express";
 import Greenhouse from "../models/greenHouses";
 import mqtt from "mqtt";
-import {ws} from "../app";
+import {actuatorStates, ws} from "../app";
 import GreenHouseStats from "../models/greenHouseStats";
 import {validateSensorData} from "../utils/guard";
 
@@ -74,9 +74,20 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
             const thresholds: Thresholds = greenHouse.thresholds;
             await validateSensorData(thresholds, greenHouseId, jsonData);
 
-            // Establish a websocket connection
-            ws.emit("sensorData", {data: rawSensorData});
+            const isActuatorEnabled = actuatorStates[greenHouseId] || false;
 
+            if (!isActuatorEnabled) {
+                ws.emit("sensorData", {data: rawSensorData});
+            } else {
+                const fixedSensorData = {
+                    temperature: 10,
+                    humidity: 30,
+                    soilMoisture: 30,
+                    ph: 4
+                };
+                const rawData = JSON.stringify(fixedSensorData);
+                ws.emit("sensorData", {data: rawData});
+            }
 
             // Check if we should save to database (once per hour)
             const now = Date.now();

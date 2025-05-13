@@ -3,7 +3,7 @@ import Greenhouse from "../models/greenHouses";
 import mqtt from "mqtt";
 import {actuatorStates, ws} from "../app";
 import GreenHouseStats from "../models/greenHouseStats";
-import {validateSensorData} from "../utils/guard";
+import {convertSensorDataToJson, generateDataInThreshold, validateSensorData} from "../utils/guard";
 
 export interface SensorData {
     temperature: number;
@@ -67,25 +67,17 @@ export async function ConnectToDevice(greenHouseId: string, res: Response) {
             // console.log(`[MQTT] Data received from ${topic}:`, message.toString());
 
             const rawSensorData = message.toString();
-            const validJsonString = rawSensorData.replace(/'/g, '"');
-            const jsonData: SensorData = await JSON.parse(validJsonString); // Convert sensorData to json
-
-            // @ts-expect-error - greenHouse.thresholds is dynamically typed and may not match Thresholds interface exactly
-            const thresholds: Thresholds = greenHouse.thresholds;
-            await validateSensorData(thresholds, greenHouseId, jsonData);
-
+            const jsonData: SensorData = await convertSensorDataToJson(rawSensorData);
+            const thresholds: Thresholds = greenHouse.thresholds as Thresholds;
             const isActuatorEnabled = actuatorStates[greenHouseId] || false;
 
             if (!isActuatorEnabled) {
+                await validateSensorData(thresholds, greenHouseId, jsonData);
                 ws.emit("sensorData", {data: rawSensorData});
             } else {
-                const fixedSensorData = {
-                    temperature: 10,
-                    humidity: 30,
-                    soilMoisture: 30,
-                    ph: 4
-                };
-                const rawData = JSON.stringify(fixedSensorData);
+                const rawData = await generateDataInThreshold({ thresholds: thresholds });
+                const jsonData: SensorData = await convertSensorDataToJson(rawData);
+                await validateSensorData(thresholds, greenHouseId, jsonData);
                 ws.emit("sensorData", {data: rawData});
             }
 

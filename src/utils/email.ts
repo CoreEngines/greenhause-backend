@@ -4,9 +4,10 @@ import fs from "fs";
 
 const emailTemplateCache: Record<string, string> = {}; 
 
+
 export async function sendEmail(userEmail: string, subject: string, emailBody: string) {
     const resend = new Resend(process.env.RESEND_API_KEY!);
-    const myEmail = "MERN <express@resend.dev>";
+    const myEmail = "MERN <onboarding@resend.dev>";
 
     try {
         await resend.emails.send({

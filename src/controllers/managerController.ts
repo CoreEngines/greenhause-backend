@@ -7,7 +7,7 @@ import Technician from "../models/technicians";
 import {hashPassword} from "../utils/hash";
 import mongoose from "mongoose";
 import {validateUser as validateAndGetUser} from "../middlewares/authMiddleware";
-import {getEmailTemplate, sendEmail} from "../utils/email";
+import {getEmailTemplate, sendEmail, sendTestEmail} from "../utils/email";
 import GreenHouse from "../models/greenHouses";
 
 export async function AddFarmer(req: Request, res: Response): Promise<void> {
@@ -33,12 +33,12 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
 
     let farmerUser = await User.findOne({email: farmerEmail});
 
+    const randomPassword = Math.random().toString(36).slice(-8);
+    console.log(randomPassword);
     if (!farmerUser) {
         // Generate a random password for a new user
         // Use the following hardcoded password for testing purposes (Uncomment if needed)
-        const randomPassword = "aptget123";
-        // const randomPassword = Math.random().toString(36).slice(-8);
-        console.log(randomPassword);
+        // const randomPassword = "aptget123";
 
         const hashedPassword = await hashPassword(randomPassword);
 
@@ -52,7 +52,11 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
         });
 
         await farmerUser.save();
+        sendTestEmail();
+        sendEmail(farmerEmail, "Your Account Credentials", `Your password is: ${randomPassword}`);
     }
+
+    
 
     farmerUser.avatar = `https://avatar.iran.liara.run/public/boy?username=${farmerUser._id}`;
     await farmerUser.save();
@@ -93,6 +97,21 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
     // Update staff count before saving
     greenHouse.staffCount = (greenHouse.farmers?.length || 0) + (greenHouse.technicians?.length || 0);
     await greenHouse.save();
+
+                const emailBody = getEmailTemplate(
+        "account-password-template",
+         null,
+         randomPassword,
+    );
+    const subject: string = "Your Account Credentials: Login Details";
+
+    try {
+        await sendEmail(farmerEmail, subject, emailBody);
+    } catch (error) {
+        console.error("Error sending email:", error);
+        res.status(500).json({error: "Failed to send email"});
+        return;
+    }
 
     res.status(201).json({
         message: "Farmer added successfully",

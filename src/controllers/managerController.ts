@@ -7,7 +7,7 @@ import Technician from "../models/technicians";
 import {hashPassword} from "../utils/hash";
 import mongoose from "mongoose";
 import {validateUser as validateAndGetUser} from "../middlewares/authMiddleware";
-import {getEmailTemplate, sendEmail, sendTestEmail} from "../utils/email";
+import {getEmailTemplate, sendEmail} from "../utils/email";
 import GreenHouse from "../models/greenHouses";
 
 export async function AddFarmer(req: Request, res: Response): Promise<void> {

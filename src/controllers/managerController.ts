@@ -52,8 +52,6 @@ export async function AddFarmer(req: Request, res: Response): Promise<void> {
         });
 
         await farmerUser.save();
-        sendTestEmail();
-        sendEmail(farmerEmail, "Your Account Credentials", `Your password is: ${randomPassword}`);
     }
 
     
